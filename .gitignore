@@ -1,3 +1,10 @@
+# Ignored folders
+build/
+lib/
+
+# Mac OS X files
+*.DS_Store
+
 # Compiled Object files
 *.slo
 *.lo
