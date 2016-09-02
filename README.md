@@ -1,4 +1,4 @@
-# Real-time PBR Learning Engine
+# Real-Time PBR Learning Engine
 
 ## About
 This project is purely for learning purposes where I create a physically based real-time renderer and get more familiar with C++ in a graphics context.
@@ -16,4 +16,5 @@ This project depends on a few external libraries:
 
 ## Contact
 Brian Ho
+
 brian@brkho.com
