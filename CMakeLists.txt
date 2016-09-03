@@ -33,8 +33,8 @@ include_directories(include/
                     lib/stb/)
 
 file(GLOB VENDORS_SOURCES lib/glad/src/glad.c)
-file(GLOB PROJECT_HEADERS include/*.hpp)
-file(GLOB PROJECT_SOURCES src/*.cpp)
+file(GLOB PROJECT_HEADERS include/*.h)
+file(GLOB PROJECT_SOURCES src/*.cc)
 file(GLOB PROJECT_SHADERS src/shaders/*.comp
                           src/shaders/*.frag
                           src/shaders/*.geom
