@@ -110,18 +110,26 @@ int main(int /* argc */, char* /* argv */[]) {
   }
 
   GLuint program = LinkProgram("shaders/std.vert", "shaders/std.frag");
+  if (program == 0) {
+    std::cout << "Failed to create shader program." << std::endl;
+    glfwTerminate();
+    return EXIT_FAILURE;
+  }
 
   // Set callbacks on the newly created window.
   glfwSetKeyCallback(window, key_callback);
 
   GLfloat vertices[] = {
     // Positions         // Colors
-     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
-};   
+    -1.0f,  1.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+     1.0f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
+     1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+    -1.0f, -1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
+
+  };
   GLuint indices[] = {
     0, 1, 2,
+    2, 3, 0,
   };
   GLuint vao;
   GLuint vbo;
@@ -145,20 +153,38 @@ int main(int /* argc */, char* /* argv */[]) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
+  glEnable(GL_DEPTH_TEST);
+
   // Main rendering loop.
   while(!glfwWindowShouldClose(window)) {
     glfwPollEvents();
 
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(program);
 
-    GLfloat timeValue = glfwGetTime();
-    GLfloat alphaValue = (sin(timeValue) / 2) + 0.5;
-    GLint alphaLocation = glGetUniformLocation(program, "alpha");
-    std::cout << alphaLocation << "   " << alphaValue << std::endl;
-    glUniform1f(alphaLocation, alphaValue);
+    glm::mat4 model;
+    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    GLint model_location = glGetUniformLocation(program, "model");
+    glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
+
+    glm::mat4 view;
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    GLint view_location = glGetUniformLocation(program, "view");
+    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
+
+    glm::mat4 projection;
+    projection = glm::perspective(glm::radians(45.0f), (GLfloat)kWindowWidth / kWindowHeight,
+        0.1f, 100.0f);
+    GLint projection_location = glGetUniformLocation(program, "projection");
+    glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(projection));
+
+    // glm::mat4 transform;
+    // transform = glm::rotate(transform, glm::radians((GLfloat)glfwGetTime() * 50.0f), glm::vec3(0.0, 0.0, 1.0));
+    // transform = glm::scale(transform, glm::vec3(0.5, 0.5, 0.5));  
+    // GLint transform_location = glGetUniformLocation(program, "transform");
+    // glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(transform));
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
