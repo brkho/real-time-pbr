@@ -35,10 +35,10 @@ include_directories(include/
 file(GLOB VENDORS_SOURCES lib/glad/src/glad.c)
 file(GLOB PROJECT_HEADERS include/*.h)
 file(GLOB PROJECT_SOURCES src/*.cc)
-file(GLOB PROJECT_SHADERS src/shaders/*.comp
-                          src/shaders/*.frag
-                          src/shaders/*.geom
-                          src/shaders/*.vert)
+file(GLOB PROJECT_SHADERS shaders/*.comp
+                          shaders/*.frag
+                          shaders/*.geom
+                          shaders/*.vert)
 file(GLOB PROJECT_CONFIGS CMakeLists.txt
                          .gitattributes
                          .gitignore
@@ -54,6 +54,21 @@ add_definitions(-DGLFW_INCLUDE_NONE
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
                                ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
                                ${VENDORS_SOURCES})
+
+add_custom_target(copy_shaders ALL
+  COMMAND rsync
+      -r
+      "${PROJECT_SOURCE_DIR}/shaders"
+      "${PROJECT_BINARY_DIR}"
+  COMMENT "Copy shaders to build tree"
+  VERBATIM)
+
+add_custom_target(run
+    COMMAND ${PROJECT_NAME}
+    DEPENDS ${PROJECT_NAME}
+    WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
+)
+
 target_link_libraries(${PROJECT_NAME} assimp glfw
                       ${GLFW_LIBRARIES} ${GLAD_LIBRARIES})
 set_target_properties(${PROJECT_NAME} PROPERTIES

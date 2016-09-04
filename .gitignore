@@ -5,6 +5,9 @@ lib/
 # Mac OS X files
 *.DS_Store
 
+# ctag files
+.tags
+
 # Compiled Object files
 *.slo
 *.lo
