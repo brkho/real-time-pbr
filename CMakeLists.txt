@@ -33,9 +33,9 @@ include_directories(include/
                     lib/stb/)
 
 file(GLOB VENDORS_SOURCES lib/glad/src/glad.c)
-file(GLOB PROJECT_HEADERS include/*.h)
-file(GLOB PROJECT_SOURCES src/*.cc)
-file(GLOB PROJECT_SHADERS shaders/*.comp
+file(GLOB_RECURSE PROJECT_HEADERS include/*.h)
+file(GLOB_RECURSE PROJECT_SOURCES src/*.cc)
+file(GLOB_RECURSE PROJECT_SHADERS shaders/*.comp
                           shaders/*.frag
                           shaders/*.geom
                           shaders/*.vert)
