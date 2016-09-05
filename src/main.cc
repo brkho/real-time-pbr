@@ -6,21 +6,54 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 
+struct Position {
+  double x;
+  double y;
+};
+
+glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 camera_up = glm::vec3(0.0f, 0.0f, 1.0f);
+
+Position previous_pos;
+double current_yaw;
+double current_pitch;
+double distance;
 bool keys[1024];
+bool clicking;
+glm::vec3 pan_offset;
+glm::mat4 view_matrix;
 
-// The callback for a key event that gets regstered with GLFW. Currently this just quits the
-// program when the escape key is pressed.
+void update_camera() {
+  // Convert from spherical coordinates to Cartesian coordinates.
+  camera_pos = glm::vec3(
+      distance * sin(current_pitch) * cos(current_yaw),
+      distance * sin(current_pitch) * sin(current_yaw),
+      distance * cos(current_pitch));
+  camera_pos += pan_offset;
+  float up_direction = sin(current_pitch) > 0 ? 1.0 : -1.0;
+  camera_target = pan_offset;
+  camera_up = glm::vec3(0.0f, 0.0f, up_direction);
+  view_matrix = glm::lookAt(camera_pos, camera_target, camera_up);
+}
+
+void initialize_camera() {
+  current_yaw = 0.0;
+  current_pitch = 0.78;
+  distance = 3.0;
+  pan_offset = glm::vec3(0.0, 0.0, 0.0);
+  update_camera();
+}
+
+// The callback for a key event that gets regstered with GLFW.
 void key_callback(GLFWwindow* window, int key, int /* scancode */, int action, int /* mode */) {
-  if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, GL_TRUE);
-  }
-
   if(action == GLFW_PRESS) {
     keys[key] = true;
   } else if(action == GLFW_RELEASE) {
@@ -28,16 +61,43 @@ void key_callback(GLFWwindow* window, int key, int /* scancode */, int action, i
   }
 }
 
-void perform_movement(glm::vec3* camera_pos, glm::vec3 camera_front, glm::vec3 camera_up) {
-  GLfloat camera_speed = 0.01f;
-  if(keys[GLFW_KEY_W])
-    *camera_pos += camera_speed * camera_front;
-  if(keys[GLFW_KEY_S])
-    *camera_pos -= camera_speed * camera_front;
-  if(keys[GLFW_KEY_A])
-    *camera_pos -= glm::normalize(glm::cross(camera_front, camera_up)) * camera_speed;
-  if(keys[GLFW_KEY_D])
-    *camera_pos += glm::normalize(glm::cross(camera_front, camera_up)) * camera_speed;
+// The callback for a mouse click that gets registered with GLFW.
+void mouse_button_callback(GLFWwindow* window, int button, int action, int /* mods */) {
+  if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    previous_pos.x = x;
+    previous_pos.y = y;
+    clicking = action == GLFW_PRESS;
+  }
+}
+
+// The callback for a mouse scroll that gets registered with GLFW.
+void scroll_callback(GLFWwindow* /* window */, double /* x */, double y) {
+  distance = std::max(0.1, distance - y * kZoomSensitivity);
+}
+
+void handle_input(GLFWwindow* window) {
+  if (keys[GLFW_KEY_ESCAPE]) {
+    glfwSetWindowShouldClose(window, GL_TRUE);
+  } else if (keys[GLFW_KEY_F]){
+    initialize_camera();
+  }
+  if (clicking) {
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    if (keys[GLFW_KEY_LEFT_ALT]) {
+      current_yaw += (previous_pos.x - x) * kRotateSensitivity;
+      current_pitch += (previous_pos.y - y) * kRotateSensitivity;
+    } else if (keys[GLFW_KEY_LEFT_CONTROL]) {
+      glm::vec3 up_vector(glm::row(view_matrix, 1));
+      glm::vec3 right_vector(glm::row(view_matrix, 0));
+      pan_offset += right_vector * (previous_pos.x - x) * kPanSensitivity;
+      pan_offset -= up_vector * (previous_pos.y - y) * kPanSensitivity;
+    }
+    previous_pos.x = x;
+    previous_pos.y = y;
+  }
 }
 
 // Sets up gl3w and returns the GLFW context. If the context cannot be set up, return nullptr.
@@ -138,7 +198,10 @@ int main(int /* argc */, char* /* argv */[]) {
 
   // Set callbacks on the newly created window.
   std::fill_n(keys, 1024, 0);
+  clicking = false;
   glfwSetKeyCallback(window, key_callback);
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   GLfloat vertices[] = {
     // Positions         // Colors
@@ -175,16 +238,13 @@ int main(int /* argc */, char* /* argv */[]) {
   glBindVertexArray(0);
 
   glEnable(GL_DEPTH_TEST);
-
-  // Camera initialization.
-  glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f,  3.0f);
-  glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
-  glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
+  initialize_camera();
 
   // Main rendering loop.
   while(!glfwWindowShouldClose(window)) {
     glfwPollEvents();
-    perform_movement(&camera_pos, camera_front, camera_up);
+    handle_input(window);
+    update_camera();
 
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -192,14 +252,12 @@ int main(int /* argc */, char* /* argv */[]) {
     glUseProgram(program);
 
     glm::mat4 model;
-    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     GLint model_location = glGetUniformLocation(program, "model");
     glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
 
-    glm::mat4 view;
-    view = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
     GLint view_location = glGetUniformLocation(program, "view");
-    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
 
     glm::mat4 projection;
     projection = glm::perspective(glm::radians(45.0f), (GLfloat)kWindowWidth / kWindowHeight,

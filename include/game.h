@@ -11,11 +11,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/ext.hpp>
 
 #include <stb_image.h>
 
-// Define Some Constants
 const int kWindowWidth = 1280;
 const int kWindowHeight = 800;
+const double kRotateSensitivity = 0.005;
+const double kPanSensitivity = 0.005;
+const double kZoomSensitivity = 0.01;
 
 #endif /* GAME_H */
