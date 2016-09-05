@@ -12,13 +12,33 @@
 #include <sstream>
 #include <string>
 
+bool keys[1024];
+
 // The callback for a key event that gets regstered with GLFW. Currently this just quits the
 // program when the escape key is pressed.
 void key_callback(GLFWwindow* window, int key, int /* scancode */, int action, int /* mode */) {
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GL_TRUE);
   }
-}    
+
+  if(action == GLFW_PRESS) {
+    keys[key] = true;
+  } else if(action == GLFW_RELEASE) {
+    keys[key] = false;
+  }
+}
+
+void perform_movement(glm::vec3* camera_pos, glm::vec3 camera_front, glm::vec3 camera_up) {
+  GLfloat camera_speed = 0.01f;
+  if(keys[GLFW_KEY_W])
+    *camera_pos += camera_speed * camera_front;
+  if(keys[GLFW_KEY_S])
+    *camera_pos -= camera_speed * camera_front;
+  if(keys[GLFW_KEY_A])
+    *camera_pos -= glm::normalize(glm::cross(camera_front, camera_up)) * camera_speed;
+  if(keys[GLFW_KEY_D])
+    *camera_pos += glm::normalize(glm::cross(camera_front, camera_up)) * camera_speed;
+}
 
 // Sets up gl3w and returns the GLFW context. If the context cannot be set up, return nullptr.
 GLFWwindow* SetupGl3wAndGlfwContext() {
@@ -117,6 +137,7 @@ int main(int /* argc */, char* /* argv */[]) {
   }
 
   // Set callbacks on the newly created window.
+  std::fill_n(keys, 1024, 0);
   glfwSetKeyCallback(window, key_callback);
 
   GLfloat vertices[] = {
@@ -155,9 +176,15 @@ int main(int /* argc */, char* /* argv */[]) {
 
   glEnable(GL_DEPTH_TEST);
 
+  // Camera initialization.
+  glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f,  3.0f);
+  glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
+  glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
+
   // Main rendering loop.
   while(!glfwWindowShouldClose(window)) {
     glfwPollEvents();
+    perform_movement(&camera_pos, camera_front, camera_up);
 
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -170,7 +197,7 @@ int main(int /* argc */, char* /* argv */[]) {
     glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
 
     glm::mat4 view;
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    view = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
     GLint view_location = glGetUniformLocation(program, "view");
     glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view));
 
