@@ -2,10 +2,6 @@
 
 #include <iostream>
 
-gfx::ModelInfo::ModelInfo(std::vector<gfx::Vertex> vertices, std::vector<GLuint> indices) :
-    vertices{vertices}, indices{indices} {
-}
-
-void gfx::ModelInfo::Draw() {
-  std::cout << "vertices: " << vertices.size() << std::endl;
+gfx::ModelInfo::ModelInfo(std::string model_path, gfx::Color color) : color{color} {
+  return;
 }

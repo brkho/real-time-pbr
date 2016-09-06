@@ -3,6 +3,7 @@
 
 #include "game.h"
 #include "gfx/model_info.h"
+#include "gfx/model_instance.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -245,11 +246,11 @@ int main(int /* argc */, char* /* argv */[]) {
 
 
 
-  gfx::Vertex vertex{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)};
-  std::vector<gfx::Vertex> test_vertices {vertex};
-  std::vector<GLuint> test_indices {1, 2, 3, 4};
-  gfx::ModelInfo model_info {test_vertices, test_indices};
-  model_info.Draw();
+  // gfx::Vertex vertex{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)};
+  // std::vector<gfx::Vertex> test_vertices {vertex};
+  // std::vector<GLuint> test_indices {1, 2, 3, 4};
+  // gfx::ModelInfo model_info {test_vertices, test_indices};
+  // model_info.Draw();
 
 
 

@@ -2,27 +2,24 @@
 #define GFX_MODEL_INFO_H
 
 #include "gfx/color.h"
+#include "gfx/mesh.h"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
+#include <string>
 #include <vector>
 
 namespace gfx {
 
-struct Vertex {
-  glm::vec3 position;
-  glm::vec3 normal;
-};
-
 class ModelInfo {
   public:
-    std::vector<Vertex> vertices;
-    std::vector<GLuint> indices;
+    std::vector<gfx::Mesh> meshes;
+    gfx::Color color;
 
-    ModelInfo(std::vector<Vertex> vertices, std::vector<GLuint> indices);
-    void Draw();
+    ModelInfo(std::string model_path, gfx::Color color);
   private:
+    // TODO: Pull from a global pool of managed buffers instead of having a buffer per model.
     GLuint vao;
     GLuint vbo;
     GLuint ebo;
