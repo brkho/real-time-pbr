@@ -4,6 +4,7 @@
 #include "game.h"
 #include "gfx/model_info.h"
 #include "gfx/model_instance.h"
+#include "gfx/exceptions.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -15,6 +16,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <exception>
 
 struct Position {
   double x;
@@ -244,8 +246,6 @@ int main(int /* argc */, char* /* argv */[]) {
   initialize_camera();
 
 
-
-
   // gfx::Vertex vertex{glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)};
   // std::vector<gfx::Vertex> test_vertices {vertex};
   // std::vector<GLuint> test_indices {1, 2, 3, 4};
@@ -253,7 +253,7 @@ int main(int /* argc */, char* /* argv */[]) {
   // model_info.Draw();
 
 
-
+  gfx::ModelInfo mi = gfx::ModelInfo("test", true);
 
 
 

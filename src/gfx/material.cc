@@ -6,6 +6,10 @@ gfx::Material::Material(std::string diffuse_name, std::string specular_name, GLf
   specular_handle = 0;
 }
 
+gfx::Material::~Material() {
+  return;
+}
+
 void gfx::Material::UseMaterial() {
   return;
 }

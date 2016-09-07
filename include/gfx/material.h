@@ -16,12 +16,22 @@ namespace gfx {
 
 class Material {
   public:
+    // Constructs a material with a path to the diffuse texture, a path to the specular texture,
+    // and the shininess as a float..
     Material(std::string diffuse_name, std::string specular_name, GLfloat shininess);
+
+    // Destroys the material by clearing the diffuse texture and the specular texture.
+    ~Material();
+
+    // Uses the material for rendering the current model.
     void UseMaterial();
 
   private:
+    // The shininess of the material.
     GLfloat shininess;
+    // The OpenGL handle to the diffuse texture.
     GLuint diffuse_handle;
+    // The OpenGL handle to the specular texture.
     GLuint specular_handle;
 };
 
