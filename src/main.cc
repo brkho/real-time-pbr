@@ -253,7 +253,8 @@ int main(int /* argc */, char* /* argv */[]) {
   // model_info.Draw();
 
 
-  gfx::ModelInfo mi = gfx::ModelInfo("test", true);
+  gfx::ModelInfo model_info = gfx::ModelInfo("assets/sphere.obj", true);
+  gfx::ModelInstance model_instance = gfx::ModelInstance(&model_info);
 
 
 
@@ -268,10 +269,10 @@ int main(int /* argc */, char* /* argv */[]) {
 
     glUseProgram(program);
 
-    glm::mat4 model;
-    model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    GLint model_location = glGetUniformLocation(program, "model");
-    glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
+    // glm::mat4 model;
+    // model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    // GLint model_location = glGetUniformLocation(program, "model");
+    // glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
 
     GLint view_location = glGetUniformLocation(program, "view");
     glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
@@ -288,8 +289,9 @@ int main(int /* argc */, char* /* argv */[]) {
     // GLint transform_location = glGetUniformLocation(program, "transform");
     // glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(transform));
 
-    glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // glBindVertexArray(vao);
+    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    model_instance.Draw(program);
     glfwSwapBuffers(window);
   }
 

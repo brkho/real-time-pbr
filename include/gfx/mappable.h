@@ -1,3 +1,7 @@
+// This interface defines what it means to be a Mappable (in the context of OpenGL buffers) object.
+
+// Brian Ho (brian@brkho.com)
+
 #ifndef GFX_MAPPABLE_H
 #define GFX_MAPPABLE_H
 

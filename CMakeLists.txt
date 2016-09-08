@@ -63,6 +63,14 @@ add_custom_target(copy_shaders ALL
   COMMENT "Copy shaders to build tree"
   VERBATIM)
 
+add_custom_target(copy_assets ALL
+  COMMAND rsync
+      -r
+      "${PROJECT_SOURCE_DIR}/assets"
+      "${PROJECT_BINARY_DIR}"
+  COMMENT "Copy assets to build tree"
+  VERBATIM)
+
 add_custom_target(run
     COMMAND ${PROJECT_NAME}
     DEPENDS ${PROJECT_NAME}

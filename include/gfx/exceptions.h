@@ -7,7 +7,7 @@
 
 namespace gfx {
 
-// When the VAO, VBO, or EBO buffers are already mapped and we try to map again.
+// When the VAO, VBO, or EBO buffers are already mapped when we expect them to be unmapped.
 class BuffersAlreadyMappedException : std::exception {
   public:
     const char * what () const throw () {
@@ -15,11 +15,19 @@ class BuffersAlreadyMappedException : std::exception {
     }
 };
 
-// When the VAO, VBO, or EBO buffers are not yet mapped and we try to unmap.
+// When the VAO, VBO, or EBO buffers are not yet mapped when we expect them to be mapped.
 class BuffersNotYetMappedException : std::exception {
   public:
     const char * what () const throw () {
       return "Buffers are not yet mapped.";
+    }
+};
+
+// When Assimp cannot read a file.
+class AssimpInvalidFileException : std::exception {
+  public:
+    const char * what () const throw () {
+      return "Assimp cannot read the file.";
     }
 };
 

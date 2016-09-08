@@ -39,10 +39,13 @@ class Mesh : public gfx::Mappable {
 
     // Create a Mesh with a list of verticies and indices. The should_map param specifies whether
     // Map() should be called immediately by the constructor.
-    Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, bool should_map);
+    Mesh(std::vector<Vertex>* vertices, std::vector<GLuint>* indices, bool should_map);
 
     // Destroys the Mesh by unmapping and freeing the vertex and index vectors.
     ~Mesh();
+
+    // Returns whether or not the Mesh is currently mapped with any buffers.
+    bool IsMapped();
 
     // If the model is unmapped, set up the VAO, EBO, and EBO by mapping the vertex data to the
     // buffers.
@@ -53,14 +56,14 @@ class Mesh : public gfx::Mappable {
     
     // If the model is mapped, unmap everything and then map it again.
     void Remap();
+
+    // Gets the number of indices for drawing purposes.
+    GLuint GetNumberOfIndices();
   private:
     // List of vertices.
-    std::vector<Vertex> vertices;
+    std::vector<Vertex>* vertices;
     // List of indices.
-    std::vector<GLuint> indices;
-
-    // Returns whether or not the Mesh is currently mapped with any buffers.
-    bool IsMapped();
+    std::vector<GLuint>* indices;
 };
 
 }

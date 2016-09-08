@@ -12,6 +12,8 @@
 #include "gfx/model_info.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace gfx {
 
@@ -38,12 +40,15 @@ class ModelInstance {
     ModelInstance(gfx::ModelInfo* model_info, glm::vec3 position, glm::vec3 scale,
         glm::quat rotation, gfx::Color color);
 
-    // Draws the ModelInstance to the current OpenGL context.
-    void Draw();
+    // Draws the ModelInstance to the current OpenGL context given a shader program.
+    void Draw(GLuint program);
   private:
     gfx::ModelInfo* model_info;
     glm::mat4 model_transform;
     glm::mat4 normal_transform;
+
+    // Calculates the model and normal transforms from the position, scale, rotation, and color.
+    void CalculateTransforms();
 };
 
 }

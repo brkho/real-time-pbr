@@ -10,7 +10,6 @@
 #include "gfx/mesh.h"
 
 #include <glad/glad.h>
-#include <glm/glm.hpp>
 
 #include <string>
 #include <vector>
@@ -27,8 +26,20 @@ class ModelInfo : public gfx::Mappable {
     // specifies whether the constructor should map its individual meshes.
     ModelInfo(std::string model_path, bool should_map);
 
+    // Copy constructor for ModelInfo that performs a deep copy of the meshes.
+    ModelInfo(const ModelInfo& that);
+
+    // Move constructor for ModelInfo that moves the meshes into the new ModelInfo.
+    ModelInfo(ModelInfo&& that);
+
     // Destroys a ModelInfo by calling the destructor on each of its meshes.
     ~ModelInfo();
+
+    // Copies a ModelInfo to another by taking a deep copy of the meshes.
+    ModelInfo& operator= (const ModelInfo& other);
+
+    // Returns true if all of the ModelInfo's meshes are mapped.
+    bool IsMapped();
 
     // Maps all of the ModelInfo's meshes.
     void Map();
