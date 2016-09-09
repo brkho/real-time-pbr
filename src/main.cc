@@ -5,6 +5,7 @@
 #include "gfx/model_info.h"
 #include "gfx/model_instance.h"
 #include "gfx/exceptions.h"
+#include "gfx/util.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -200,6 +201,7 @@ int main(int /* argc */, char* /* argv */[]) {
     glfwTerminate();
     return EXIT_FAILURE;
   }
+  glUseProgram(program);
 
   // Set callbacks on the newly created window.
   std::fill_n(keys, 1024, 0);
@@ -253,7 +255,7 @@ int main(int /* argc */, char* /* argv */[]) {
   // model_info.Draw();
 
 
-  gfx::ModelInfo model_info = gfx::ModelInfo("assets/box.obj", true);
+  gfx::ModelInfo model_info = gfx::ModelInfo("assets/sphere.obj", true);
   gfx::ModelInstance model_instance = gfx::ModelInstance(&model_info);
 
 
@@ -292,11 +294,7 @@ int main(int /* argc */, char* /* argv */[]) {
     // glBindVertexArray(vao);
     // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     model_instance.Draw(program);
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "OpenGL error: " << err << std::endl;
-    }
-    throw 42;
+    gfx::util::CheckGlError();
     glfwSwapBuffers(window);
   }
 

@@ -7,35 +7,22 @@
 
 #include <glad/glad.h>
 
-#include <iostream>
-
 namespace gfx {
 namespace util {
 
 // Gets the number of bytes stored in the buffer bound to target (VBO, EBO, etc).
-GLuint GetSizeOfBuffer(GLenum target) {
-  GLint buffer_size = 0;
-  glGetBufferParameteriv(target, GL_BUFFER_SIZE, &buffer_size);
-  return 4;
-}
+GLuint GetSizeOfBuffer(GLenum target);
 
 // Gets the contents of the buffer bound to target and places the data in the passed buffer
 // pointer.
-void GetBufferContents(GLenum target, GLfloat* buffer) {
-  GLuint size = GetSizeOfBuffer(target);
-  glGetBufferSubData(target, 0, size, buffer);
-}
+void GetBufferContents(GLenum target, GLuint* buffer);
 
-void PrettyPrintBuffer(GLenum target) {
-  GLuint size = GetSizeOfBuffer(target);
-  GLfloat *buffer_data = new GLfloat[size];
-  GetBufferContents(target, buffer_data);
-  for (unsigned int i = 0; i < size; ++i) {
-    std::cout << buffer_data[i] << ", ";
-  }
-  std::cout << std::endl;
-  delete buffer_data;
-}
+// Pretty prints the contents of a buffer bound to target.
+void PrettyPrintBuffer(GLenum target);
+
+// Checks the current errors queued up in OpenGL and prints it to standard output.
+void _CheckGlError(const char *file, int line);
+#define CheckGlError() _CheckGlError(__FILE__, __LINE__)
 
 }
 }

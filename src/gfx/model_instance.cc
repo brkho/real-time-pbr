@@ -1,13 +1,13 @@
 #include "gfx/exceptions.h"
 #include "gfx/model_instance.h"
-// #include "gfx/util.h"
+#include "gfx/util.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 
 gfx::ModelInstance::ModelInstance(gfx::ModelInfo* model_info) :
-    position{glm::vec3{0.0f, 0.0f, 0.0f}}, scale(glm::vec3{0.0f, 0.0f, 0.0f}),
+    position{glm::vec3{0.0f, 0.0f, 0.0f}}, scale(glm::vec3{1.0f, 1.0f, 1.0f}),
     rotation{glm::quat{1.0f, 0.0f, 0.0f, 0.0f}}, color{gfx::Color(1.0f, 1.0f, 1.0f)},
     model_info{model_info} {
   gfx::ModelInstance::CalculateTransforms();
@@ -23,6 +23,7 @@ void gfx::ModelInstance::Draw(GLuint program) {
   for (auto &mesh : model_info->meshes) {
     glBindVertexArray(mesh.vao);
     glDrawElements(GL_TRIANGLES, mesh.GetNumberOfIndices(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
   }
 }
 

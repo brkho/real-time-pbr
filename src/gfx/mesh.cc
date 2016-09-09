@@ -13,9 +13,9 @@ gfx::Mesh::Mesh(std::vector<gfx::Vertex>* vertices, std::vector<GLuint>* indices
 }
 
 gfx::Mesh::~Mesh() {
-  if(gfx::Mesh::IsMapped()) {
-    gfx::Mesh::Unmap();
-  }
+  // if(gfx::Mesh::IsMapped()) {
+  //   gfx::Mesh::Unmap();
+  // }
   // delete vertices;
   // delete indices;
 }
@@ -37,8 +37,6 @@ void gfx::Mesh::Map() {
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, vertices->size() * sizeof(Vertex), &vertices->front(),
       GL_STATIC_DRAW);
-  gfx::util::PrettyPrintBuffer(GL_ARRAY_BUFFER);
-
 
   // Set up the EBO.
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -53,11 +51,10 @@ void gfx::Mesh::Map() {
       (GLvoid*) offsetof(Vertex, normal));
   glEnableVertexAttribArray(1);
 
-  // gfx::util::PrettyPrintBuffer(GL_ELEMENT_ARRAY_BUFFER);
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-  // glBindVertexArray(0);
-  // glBindBuffer(GL_ARRAY_BUFFER, 0);
-  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void gfx::Mesh::Unmap() {
