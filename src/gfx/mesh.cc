@@ -1,5 +1,6 @@
 #include "gfx/exceptions.h"
 #include "gfx/mesh.h"
+#include "gfx/util.h"
 
 #include <iostream>
 
@@ -29,18 +30,20 @@ void gfx::Mesh::Map() {
   }
   // Generate buffers.
   glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
   glGenBuffers(1, &vbo);
   glGenBuffers(1, &ebo);
-
   // Set up the VBO.
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, this->vertices->size() * sizeof(Vertex), &this->vertices->front(),
+  glBufferData(GL_ARRAY_BUFFER, vertices->size() * sizeof(Vertex), &vertices->front(),
       GL_STATIC_DRAW);
+  gfx::util::PrettyPrintBuffer(GL_ARRAY_BUFFER);
+
 
   // Set up the EBO.
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices->size() * sizeof(GLuint),
-      &this->indices->front(), GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices->size() * sizeof(GLuint),
+      &indices->front(), GL_STATIC_DRAW);
 
   // Specify the vertex attributes.
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
@@ -50,8 +53,11 @@ void gfx::Mesh::Map() {
       (GLvoid*) offsetof(Vertex, normal));
   glEnableVertexAttribArray(1);
 
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  // gfx::util::PrettyPrintBuffer(GL_ELEMENT_ARRAY_BUFFER);
+
+  // glBindVertexArray(0);
+  // glBindBuffer(GL_ARRAY_BUFFER, 0);
+  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void gfx::Mesh::Unmap() {

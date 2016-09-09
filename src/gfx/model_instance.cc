@@ -1,5 +1,6 @@
 #include "gfx/exceptions.h"
 #include "gfx/model_instance.h"
+// #include "gfx/util.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -21,8 +22,6 @@ void gfx::ModelInstance::Draw(GLuint program) {
   // Draw all meshes.
   for (auto &mesh : model_info->meshes) {
     glBindVertexArray(mesh.vao);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ebo);
     glDrawElements(GL_TRIANGLES, mesh.GetNumberOfIndices(), GL_UNSIGNED_INT, 0);
   }
 }

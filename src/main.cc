@@ -220,27 +220,27 @@ int main(int /* argc */, char* /* argv */[]) {
     0, 1, 2,
     2, 3, 0,
   };
-  GLuint vao;
-  GLuint vbo;
-  GLuint ebo;
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-  glGenBuffers(1, &vbo);
-  glGenBuffers(1, &ebo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+  // GLuint vao;
+  // GLuint vbo;
+  // GLuint ebo;
+  // glGenVertexArrays(1, &vao);
+  // glBindVertexArray(vao);
+  // glGenBuffers(1, &vbo);
+  // glGenBuffers(1, &ebo);
+  // glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-  // Position attribute.
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-  glEnableVertexAttribArray(0);
-  // Color attribute.
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3* sizeof(GLfloat)));
-  glEnableVertexAttribArray(1);
+  // // Position attribute.
+  // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+  // glEnableVertexAttribArray(0);
+  // // Color attribute.
+  // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3* sizeof(GLfloat)));
+  // glEnableVertexAttribArray(1);
 
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
+  // glBindBuffer(GL_ARRAY_BUFFER, 0);
+  // glBindVertexArray(0);
 
   glEnable(GL_DEPTH_TEST);
   initialize_camera();
@@ -253,7 +253,7 @@ int main(int /* argc */, char* /* argv */[]) {
   // model_info.Draw();
 
 
-  gfx::ModelInfo model_info = gfx::ModelInfo("assets/sphere.obj", true);
+  gfx::ModelInfo model_info = gfx::ModelInfo("assets/box.obj", true);
   gfx::ModelInstance model_instance = gfx::ModelInstance(&model_info);
 
 
@@ -292,6 +292,11 @@ int main(int /* argc */, char* /* argv */[]) {
     // glBindVertexArray(vao);
     // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     model_instance.Draw(program);
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "OpenGL error: " << err << std::endl;
+    }
+    throw 42;
     glfwSwapBuffers(window);
   }
 
