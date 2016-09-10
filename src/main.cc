@@ -6,6 +6,7 @@
 #include "gfx/model_instance.h"
 #include "gfx/exceptions.h"
 #include "gfx/util.h"
+#include "gfx/camera.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -24,9 +25,7 @@ struct Position {
   double y;
 };
 
-glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 camera_up = glm::vec3(0.0f, 0.0f, 1.0f);
+gfx::Camera camera;
 
 Position previous_pos;
 double current_yaw;
@@ -35,19 +34,17 @@ double distance;
 bool keys[1024];
 bool clicking;
 glm::vec3 pan_offset;
-glm::mat4 view_matrix;
 
 void update_camera() {
   // Convert from spherical coordinates to Cartesian coordinates.
-  camera_pos = glm::vec3(
+  camera.camera_position = glm::vec3(
       distance * sin(current_pitch) * cos(current_yaw),
       distance * sin(current_pitch) * sin(current_yaw),
       distance * cos(current_pitch));
-  camera_pos += pan_offset;
+  camera.camera_position += pan_offset;
   float up_direction = sin(current_pitch) > 0 ? 1.0 : -1.0;
-  camera_target = pan_offset;
-  camera_up = glm::vec3(0.0f, 0.0f, up_direction);
-  view_matrix = glm::lookAt(camera_pos, camera_target, camera_up);
+  camera.camera_target = pan_offset;
+  camera.camera_up = glm::vec3(0.0f, 0.0f, up_direction);
 }
 
 void initialize_camera() {
@@ -96,10 +93,8 @@ void handle_input(GLFWwindow* window) {
       current_yaw += (previous_pos.x - x) * kRotateSensitivity;
       current_pitch += (previous_pos.y - y) * kRotateSensitivity;
     } else if (keys[GLFW_KEY_LEFT_CONTROL]) {
-      glm::vec3 up_vector(glm::row(view_matrix, 1));
-      glm::vec3 right_vector(glm::row(view_matrix, 0));
-      pan_offset += right_vector * (previous_pos.x - x) * kPanSensitivity;
-      pan_offset -= up_vector * (previous_pos.y - y) * kPanSensitivity;
+      pan_offset += camera.GetRightVector() * (previous_pos.x - x) * kPanSensitivity;
+      pan_offset -= camera.GetUpVector() * (previous_pos.y - y) * kPanSensitivity;
     }
     previous_pos.x = x;
     previous_pos.y = y;
@@ -245,6 +240,12 @@ int main(int /* argc */, char* /* argv */[]) {
   // glBindVertexArray(0);
 
   glEnable(GL_DEPTH_TEST);
+
+
+  camera = gfx::Camera();
+
+
+
   initialize_camera();
 
 
@@ -277,7 +278,7 @@ int main(int /* argc */, char* /* argv */[]) {
     // glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model));
 
     GLint view_location = glGetUniformLocation(program, "view");
-    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
+    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(camera.GetViewTransform()));
 
     glm::mat4 projection;
     projection = glm::perspective(glm::radians(45.0f), (GLfloat)kWindowWidth / kWindowHeight,
