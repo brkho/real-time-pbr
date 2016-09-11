@@ -27,7 +27,7 @@ gfx::ModelInfo::ModelInfo(std::string model_path, bool should_map) :
           assimp_mesh->mVertices[j].z};
       glm::vec3 normal{assimp_mesh->mNormals[j].x, assimp_mesh->mNormals[j].y,
           assimp_mesh->mNormals[j].z};
-      gfx::Vertex vertex{position};
+      gfx::Vertex vertex{position, normal};
       vertices->push_back(vertex);
     }
 

@@ -1,0 +1,126 @@
+// This is the main entry point of the demo program.
+// Brian Ho (brian@brkho.com)
+
+// #include "game.h"
+#include "gfx/model_info.h"
+#include "gfx/model_instance.h"
+#include "gfx/camera.h"
+#include "gfx/game_window.h"
+
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+
+const int kWindowWidth = 1280;
+const int kWindowHeight = 800;
+const double kRotateSensitivity = 0.005;
+const double kPanSensitivity = 0.005;
+const double kZoomSensitivity = 0.01;
+
+struct Position {
+  double x;
+  double y;
+};
+
+gfx::Camera camera;
+Position previous_pos;
+double current_yaw;
+double current_pitch;
+double distance;
+bool keys[1024];
+bool clicking = false;
+glm::vec3 pan_offset;
+
+void update_camera() {
+  // Convert from spherical coordinates to Cartesian coordinates.
+  camera.camera_position = glm::vec3(
+      distance * sin(current_pitch) * cos(current_yaw),
+      distance * sin(current_pitch) * sin(current_yaw),
+      distance * cos(current_pitch));
+  camera.camera_position += pan_offset;
+  float up_direction = sin(current_pitch) > 0 ? 1.0 : -1.0;
+  camera.camera_target = pan_offset;
+  camera.camera_up = glm::vec3(0.0f, 0.0f, up_direction);
+}
+
+void initialize_camera() {
+  current_yaw = 0.0;
+  current_pitch = 0.78;
+  distance = 3.0;
+  pan_offset = glm::vec3(0.0, 0.0, 0.0);
+  update_camera();
+}
+
+// The callback for a key event that gets regstered with GLFW.
+void key_callback(GLFWwindow* /* window */, int key, int /* scancode */, int action, int /* mode */) {
+  if(action == GLFW_PRESS) {
+    keys[key] = true;
+  } else if(action == GLFW_RELEASE) {
+    keys[key] = false;
+  }
+}
+
+// The callback for a mouse click that gets registered with GLFW.
+void mouse_button_callback(GLFWwindow* window, int button, int action, int /* mods */) {
+  if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    previous_pos.x = x;
+    previous_pos.y = y;
+    clicking = action == GLFW_PRESS;
+  }
+}
+
+// The callback for a mouse scroll that gets registered with GLFW.
+void scroll_callback(GLFWwindow* /* window */, double /* x */, double y) {
+  distance = std::max(0.1, distance - y * kZoomSensitivity);
+}
+
+void handle_input(GLFWwindow* window) {
+  if (keys[GLFW_KEY_ESCAPE]) {
+    glfwSetWindowShouldClose(window, GL_TRUE);
+  } else if (keys[GLFW_KEY_F]){
+    initialize_camera();
+  }
+  if (clicking) {
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    if (keys[GLFW_KEY_LEFT_ALT]) {
+      current_yaw += (previous_pos.x - x) * kRotateSensitivity;
+      current_pitch += (previous_pos.y - y) * kRotateSensitivity;
+    } else if (keys[GLFW_KEY_LEFT_CONTROL]) {
+      pan_offset += camera.GetRightVector() * (previous_pos.x - x) * kPanSensitivity;
+      pan_offset -= camera.GetUpVector() * (previous_pos.y - y) * kPanSensitivity;
+    }
+    previous_pos.x = x;
+    previous_pos.y = y;
+  }
+}
+
+// Main point of entry for the code.
+int main(int /* argc */, char* /* argv */[]) {
+  camera = gfx::Camera();
+  initialize_camera();
+  gfx::GameWindow game_window(kWindowWidth, kWindowHeight, "shaders/std.vert", "shaders/std.frag",
+      &camera, 45.0f, gfx::Color(0.5f, 0.5f, 0.5f));
+  gfx::ModelInfo model_info = gfx::ModelInfo("assets/sphere.obj", true);
+  gfx::ModelInstance model_instance = gfx::ModelInstance(&model_info);
+
+  std::fill_n(keys, 1024, 0);
+  glfwSetKeyCallback(game_window.window, key_callback);
+  glfwSetMouseButtonCallback(game_window.window, mouse_button_callback);
+  glfwSetScrollCallback(game_window.window, scroll_callback);
+
+  // Main rendering loop.
+  while(game_window.IsRunning()) {
+    game_window.PollForEvents();
+    handle_input(game_window.window);
+    update_camera();
+
+    game_window.PrepareRender();
+    game_window.RenderModel(&model_instance);
+    game_window.FinishRender();
+  }
+
+  glfwTerminate();
+  return EXIT_SUCCESS;
+}

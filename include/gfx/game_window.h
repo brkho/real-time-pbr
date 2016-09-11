@@ -1,59 +1,99 @@
-// // This class defines a game window that abstracts away much of the OpenGL operations. In addition,
-// // it will also manage the camera, shaders, and program. The GameWindow will hold references to
-// // the Camera and Lights and will require an input of ModelInstances to draw.
-// //
-// // Brian Ho (brian@brkho.com)
+// This class defines a game window backed by GLFW that abstracts away much of the OpenGL
+// operations. In addition, it will also manage the camera, shaders, and program. The GameWindow
+// will hold references to the Camera and Lights and will require an input of ModelInstances to
+// draw. The full feature set of the GLFW can be accessed via the window property.
+//
+// Brian Ho (brian@brkho.com)
 
-// #ifndef GFX_MODEL_INFO_H
-// #define GFX_MODEL_INFO_H
+#ifndef GFX_GAME_WINDOW_H
+#define GFX_GAME_WINDOW_H
 
-// #include "gfx/mappable.h"
-// #include "gfx/mesh.h"
+#include "gfx/camera.h"
+#include "gfx/color.h"
+#include "gfx/model_instance.h"
 
-// #include <glad/glad.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
-// #include <string>
-// #include <vector>
+#include <string>
 
-// namespace gfx {
+namespace gfx {
 
-// class GameWindow {
-//   public:
-//     // The 
-//     std::vector<gfx::Mesh> meshes;
+class GameWindow {
+  public:
+    // A reference to the camera used to render the scene.
+    gfx::Camera* camera;
 
-//     // TODO: Use a homegrown compact format instead of assimp.
-//     // Creates a ModelInfo by loading a model with assimp via its path. The should_map argument
-//     // specifies whether the constructor should map its individual meshes.
-//     ModelInfo(std::string model_path, bool should_map);
+    // A reference to the underlying GLFW window.
+    GLFWwindow* window;
 
-//     // Copy constructor for ModelInfo that performs a deep copy of the meshes.
-//     ModelInfo(const ModelInfo& that);
+    // Constructor with a width, height, path to the vertex shader, path to the fragment shader,
+    // referenceto the camera, field of view, and the buffer clear color.
+    GameWindow(int width, int height, std::string vertex_path, std::string fragment_path,
+        gfx::Camera* camera, float fov, gfx::Color color);
 
-//     // Move constructor for ModelInfo that moves the meshes into the new ModelInfo.
-//     ModelInfo(ModelInfo&& that);
+    // Constructor with a width, height, path to the vertex shader, path to the fragment shader,
+    // referenceto the camera, field of view, and the buffer clear color. This defaults the FOV to
+    // 45 degrees and the buffer clear color to black.
+    GameWindow(int width, int height, std::string vertex_path, std::string fragment_path,
+        gfx::Camera* camera);
 
-//     // Destroys a ModelInfo by calling the destructor on each of its meshes.
-//     ~ModelInfo();
+    // TODO: Actually clean up after ourselves with the Rule of Three.
 
-//     // Copies a ModelInfo to another by taking a deep copy of the meshes.
-//     ModelInfo& operator= (const ModelInfo& other);
+    // Returns whether the window is currently running (used to determine when to quit the main
+    // game loop).
+    bool IsRunning();
 
-//     // Returns true if all of the ModelInfo's meshes are mapped.
-//     bool IsMapped();
+    // Updates the dimensions of the window and recalculates the perspective projection.
+    void UpdateDimensions(int width, int height);
 
-//     // Maps all of the ModelInfo's meshes.
-//     void Map();
+    // Updates the field of view and recalculates the perspective projection.
+    void UpdateFieldOfView(float fov);
 
-//     // Unmaps all of the ModelInfo's meshes.
-//     void Unmap();
+    // Sets the buffer clear color.
+    void SetBufferClearColor(gfx::Color color);
 
-//     // Remaps all of the ModelInfo's meshes.
-//     void Remap();
-//   private:
-//     // The shader program used by the GameWindow.
-//     GLuint program;
-// };
+    // Polls the GLFW window for events and invokes the proper callbacks.
+    void PollForEvents();
 
-// }
-// #endif // GFX_MODEL_INFO_H
+    // This must be called every frame before drawing any ModelInstances to the screen. This sets
+    // the state of the OpenGL context so that we can begin drawing the next frame. After this is
+    // called, the caller shouldn't change the game state and should only call RenderModel until
+    // the render is completed with FinishRender.
+    void PrepareRender();
+
+    // Draws a given ModelInstance. Note that this must be called in between a PrepareRender and a
+    // a FinishRender.
+    void RenderModel(gfx::ModelInstance* model_instance);
+
+    // Complets the rendering started by PrepareRender. This swaps the buffer so the rendered image
+    // can actually be seen.
+    void FinishRender();
+
+  private:
+    // The field of view for the window.
+    GLfloat field_of_view;
+
+    // The shader program used by the GameWindow.
+    GLuint program;
+
+    // The matrix used for the perspective projection.
+    glm::mat4 perspective_projection;
+
+    // Given a path to the shader and a shader type, compile the shader.
+    GLuint CompileShader(std::string path, GLenum shader_type);
+
+    // Given a path to the vertex shader and the fragment shader, compile the shaders and link them
+    // into a shader program.
+    GLuint LinkProgram(std::string vertex_path, std::string fragment_path);
+
+    // Initializes the game window.
+    void InitializeGameWindow(int width, int height, gfx::Color color);
+
+    // Updates the perspective projection with the width, height, and field of view.
+    void UpdatePerspectiveProjection(int width, int height);
+};
+
+}
+#endif // GFX_GAME_WINDOW_H

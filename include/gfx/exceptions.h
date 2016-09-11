@@ -31,5 +31,13 @@ class AssimpInvalidFileException : std::exception {
     }
 };
 
+// When the game window cannot be initialized.
+class GameWindowCannotBeInitializedException : std::exception {
+  public:
+    const char * what () const throw () {
+      return "Game window cannot be initialized.";
+    }
+};
+
 }
 #endif // GFX_EXCEPTIONS_H
