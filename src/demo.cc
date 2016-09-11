@@ -15,6 +15,8 @@ const int kWindowHeight = 800;
 const double kRotateSensitivity = 0.005;
 const double kPanSensitivity = 0.005;
 const double kZoomSensitivity = 0.01;
+const std::string kVertexShaderPath = "shaders/main.vert";
+const std::string kFragmentShaderPath = "shaders/main.frag";
 
 struct Position {
   double x;
@@ -100,7 +102,7 @@ void handle_input(GLFWwindow* window) {
 int main(int /* argc */, char* /* argv */[]) {
   camera = gfx::Camera();
   initialize_camera();
-  gfx::GameWindow game_window(kWindowWidth, kWindowHeight, "shaders/std.vert", "shaders/std.frag",
+  gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kVertexShaderPath, kFragmentShaderPath,
       &camera, 45.0f, gfx::Color(0.5f, 0.5f, 0.5f));
   gfx::ModelInfo model_info = gfx::ModelInfo("assets/sphere.obj", true);
   gfx::ModelInstance model_instance = gfx::ModelInstance(&model_info);

@@ -5,7 +5,7 @@
 #include <iostream>
 
 gfx::Mesh::Mesh(std::vector<gfx::Vertex>* vertices, std::vector<GLuint>* indices, bool should_map) :
-    vao{0}, vbo{0}, ebo{0}, material{gfx::Material("diffuse", "specular", 0.0f)},
+    vao{0}, vbo{0}, ebo{0}, material{gfx::Material("diffuse", "specular", 0.5f)},
     vertices{vertices}, indices{indices} {
   if (should_map) {
     gfx::Mesh::Map();

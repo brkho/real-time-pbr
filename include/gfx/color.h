@@ -7,6 +7,7 @@
 #define GFX_COLOR_H
 
 #include <glad/glad.h>
+#include <glm/glm.hpp>
 
 namespace gfx {
 
@@ -39,6 +40,11 @@ class Color {
     // set to 255.
     Color(GLuint r, GLuint g, GLuint b) :
       r{(GLfloat)r / 255.0f}, g{(GLfloat)g / 255.0f}, b{(GLfloat)b / 255.0f}, a{1.0f} {}
+
+    // Converts a color to a glm::vec4.
+    glm::vec3 ToVec4() {
+      return glm::vec4(r, g, b, a);
+    }
 };
 
 }

@@ -8,8 +8,7 @@
 
 gfx::ModelInstance::ModelInstance(gfx::ModelInfo* model_info) :
     position{glm::vec3{0.0f, 0.0f, 0.0f}}, scale(glm::vec3{1.0f, 1.0f, 1.0f}),
-    rotation{glm::quat{1.0f, 0.0f, 0.0f, 0.0f}}, color{gfx::Color(1.0f, 1.0f, 1.0f)},
-    model_info{model_info} {
+    rotation{glm::quat{1.0f, 0.0f, 0.0f, 0.0f}}, model_info{model_info} {
   gfx::ModelInstance::CalculateTransforms();
 }
 
@@ -22,6 +21,7 @@ void gfx::ModelInstance::Draw(GLuint program) {
   // Draw all meshes.
   for (auto &mesh : model_info->meshes) {
     glBindVertexArray(mesh.vao);
+    mesh.material.UseMaterial(program);
     glDrawElements(GL_TRIANGLES, mesh.GetNumberOfIndices(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
   }
