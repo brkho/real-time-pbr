@@ -113,11 +113,16 @@ void gfx::GameWindow::SetBufferClearColor(gfx::Color color) {
 
 void gfx::GameWindow::SetDirectionalLight(gfx::DirectionalLight* di) {
   directional_light = di;
-  GLint di_enabled_location = glGetUniformLocation(program, "directional_light.enabled");
   if (directional_light == nullptr) {
+    GLint di_enabled_location = glGetUniformLocation(program, "directional_light.enabled");
     glUniform1i(di_enabled_location, false);
     return;
   }
+  UpdateDirectionalLight();
+}
+
+void gfx::GameWindow::UpdateDirectionalLight() {
+  GLint di_enabled_location = glGetUniformLocation(program, "directional_light.enabled");
   glUniform1i(di_enabled_location, true);
   GLint di_direction_location = glGetUniformLocation(program, "directional_light.direction");
   glUniform3fv(di_direction_location, 1, glm::value_ptr(directional_light->direction));

@@ -61,6 +61,9 @@ class GameWindow {
     // Remove the directional light.
     void UnsetDirectionalLight();
 
+    // Updates the directional light uniform.
+    void UpdateDirectionalLight();
+
     // Polls the GLFW window for events and invokes the proper callbacks.
     void PollForEvents();
 

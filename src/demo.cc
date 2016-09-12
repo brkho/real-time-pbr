@@ -106,16 +106,24 @@ int main(int /* argc */, char* /* argv */[]) {
   camera = gfx::Camera();
   initialize_camera();
   gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kVertexShaderPath, kFragmentShaderPath,
-      &camera, 45.0f, gfx::Color(0.2f, 0.2f, 0.2f));
+      &camera, 45.0f, gfx::Color(0.15f, 0.15f, 0.15f));
   gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
-      glm::vec3(1.5f, 1.5f, 1.5f));
+      glm::vec3(2.5f, 2.5f, 2.5f));
   game_window.SetDirectionalLight(&directional_light);
 
-  gfx::ModelInfo model_info = gfx::ModelInfo("assets/dragon.obj", true);
-  gfx::ModelInstance model_instance = gfx::ModelInstance(&model_info);
-  model_instance.scale = glm::vec3(0.1f, 0.1f, 0.1f);
-  model_instance.color = gfx::Color(1.0f, 0.0f, 1.0f);
-  model_instance.Update();
+  gfx::ModelInfo dragon_info = gfx::ModelInfo("assets/dragon.obj", true);
+  gfx::ModelInstance dragon_instance = gfx::ModelInstance(&dragon_info,
+      glm::vec3(0.0f, -2.5f, 0.0f));
+  dragon_instance.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+  dragon_instance.color = gfx::Color(1.0f, 0.0f, 1.0f);
+  dragon_instance.Update();
+
+  gfx::ModelInfo buddha_info = gfx::ModelInfo("assets/buddha.obj", true);
+  gfx::ModelInstance buddha_instance = gfx::ModelInstance(&buddha_info,
+      glm::vec3(0.0f, 2.5f, 0.0f));
+  buddha_instance.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+  buddha_instance.color = gfx::Color(1.0f, 0.0f, 0.0f);
+  buddha_instance.Update();
 
   std::fill_n(keys, 1024, 0);
   glfwSetKeyCallback(game_window.window, key_callback);
@@ -136,12 +144,17 @@ int main(int /* argc */, char* /* argv */[]) {
     }
     last_time = current_time;
 
+    // Move the light in a circle.
+    // directional_light.direction = glm::vec3(sin(current_time), cos(current_time), 1.0f);
+    // game_window.UpdateDirectionalLight();
+
     game_window.PollForEvents();
     handle_input(game_window.window);
     update_camera();
 
     game_window.PrepareRender();
-    game_window.RenderModel(&model_instance);
+    game_window.RenderModel(&dragon_instance);
+    game_window.RenderModel(&buddha_instance);
     game_window.FinishRender();
   }
 

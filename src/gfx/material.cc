@@ -17,4 +17,6 @@ gfx::Material::~Material() {
 void gfx::Material::UseMaterial(GLuint program) {
   GLint ambient_location = glGetUniformLocation(program, "ambient_coefficient");
   glUniform1f(ambient_location, ambient_coefficient);
+  GLint shininess_location = glGetUniformLocation(program, "shininess");
+  glUniform1f(shininess_location, shininess);
 }

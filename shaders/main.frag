@@ -10,23 +10,36 @@ struct DirectionalLight {
 
 uniform DirectionalLight directional_light;
 uniform float ambient_coefficient;
+uniform float shininess;
 uniform vec4 base_color;
 uniform vec3 camera_position;
 
 in vec3 Normal;
-in vec4 WorldPosition;
+in vec3 WorldPosition;
 
 out vec4 out_color;
 
+float clamped_cosine(vec3 a, vec3 b) {
+  return max(dot(a, b), 0.0);
+}
+
 void main() {
   vec4 total_color = vec4(ambient_coefficient * vec3(base_color), 1.0);
-  
+  vec3 view_vector = normalize(camera_position - WorldPosition);
+
   if (directional_light.enabled) {
     vec3 adjusted_diffuse_rgb = vec3(base_color) / PI;
     vec3 normalized_direction = -normalize(directional_light.direction);
-    vec3 diffuse = adjusted_diffuse_rgb *
-        (directional_light.irradiance * max(dot(Normal, normalized_direction), 0.0));
+    vec3 incoming_irradiance = directional_light.irradiance *
+        clamped_cosine(Normal, normalized_direction);
+    vec3 diffuse = adjusted_diffuse_rgb * incoming_irradiance;
     total_color += vec4(diffuse, base_color.w);
+
+    float adjusted_shininess = (shininess + 8.0) / (8.0 * PI);
+    vec3 half_angle_vector = normalize(normalized_direction + view_vector);
+    vec3 specular = (adjusted_shininess * pow(clamped_cosine(Normal, half_angle_vector), shininess) *
+        vec3(1.0, 1.0, 1.0)) * incoming_irradiance; // Put texture here.
+    total_color += vec4(specular, base_color.w);
   }
   out_color = clamp(total_color, 0.0, 1.0);
 }
