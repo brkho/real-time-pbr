@@ -1,8 +1,8 @@
 // This is the main entry point of the demo program.
 // Brian Ho (brian@brkho.com)
 
-// #include "game.h"
 #include "gfx/camera.h"
+#include "gfx/color.h"
 #include "gfx/directional_light.h"
 #include "gfx/game_window.h"
 #include "gfx/model_info.h"
@@ -10,6 +10,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+
+#include <iostream>
 
 const int kWindowWidth = 1280;
 const int kWindowHeight = 800;
@@ -104,13 +106,15 @@ int main(int /* argc */, char* /* argv */[]) {
   camera = gfx::Camera();
   initialize_camera();
   gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kVertexShaderPath, kFragmentShaderPath,
-      &camera, 45.0f, gfx::Color(0.0f, 0.0f, 0.0f));
-  gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f),
+      &camera, 45.0f, gfx::Color(0.2f, 0.2f, 0.2f));
+  gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
       glm::vec3(1.5f, 1.5f, 1.5f));
   game_window.SetDirectionalLight(&directional_light);
-  gfx::ModelInfo model_info = gfx::ModelInfo("assets/bunny.obj", true);
+
+  gfx::ModelInfo model_info = gfx::ModelInfo("assets/dragon.obj", true);
   gfx::ModelInstance model_instance = gfx::ModelInstance(&model_info);
-  model_instance.scale = glm::vec3(10.0f, 10.0f, 10.0f);
+  model_instance.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+  model_instance.color = gfx::Color(1.0f, 0.0f, 1.0f);
   model_instance.Update();
 
   std::fill_n(keys, 1024, 0);
@@ -118,8 +122,20 @@ int main(int /* argc */, char* /* argv */[]) {
   glfwSetMouseButtonCallback(game_window.window, mouse_button_callback);
   glfwSetScrollCallback(game_window.window, scroll_callback);
 
+  double fps_print_time = 2.5;
+  double last_time = game_window.GetElapsedTime();
+
   // Main rendering loop.
   while(game_window.IsRunning()) {
+    double current_time = game_window.GetElapsedTime();
+    double frame_time = current_time - last_time;
+    fps_print_time -= frame_time;
+    if (fps_print_time <= 0.0) {
+      std::cout << "FPS: " << 1.0 / frame_time << std::endl;
+      fps_print_time = 2.5;
+    }
+    last_time = current_time;
+
     game_window.PollForEvents();
     handle_input(game_window.window);
     update_camera();

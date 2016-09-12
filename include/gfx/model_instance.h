@@ -8,6 +8,7 @@
 #ifndef GFX_MODEL_INSTANCE_H
 #define GFX_MODEL_INSTANCE_H
 
+#include "gfx/color.h"
 #include "gfx/model_info.h"
 
 #include <glm/glm.hpp>
@@ -24,18 +25,20 @@ class ModelInstance {
     glm::vec3 scale;
     // Rotation of the model as a quaternion.
     glm::quat rotation;
+    // Color of the model.
+    gfx::Color color;
 
     // Default constructor which initializes the position to origin, the scale to (1.0, 1.0, 1.0),
-    // and the rotation to no rotation.
+    // the rotation to no rotation, and the color to white.
     ModelInstance(gfx::ModelInfo* model_info);
 
-    // Constructor that creates a ModelInstance with a specified position, but defaults scale and
-    // rotation.
+    // Constructor that creates a ModelInstance with a specified position, but defaults scale,
+    // rotation, and color.
     ModelInstance(gfx::ModelInfo* model_info, glm::vec3 position);
 
     // Constructor that creates a ModelInstance with all fields specified.
     ModelInstance(gfx::ModelInfo* model_info, glm::vec3 position, glm::vec3 scale,
-        glm::quat rotation);
+        glm::quat rotation, gfx::Color color);
 
     // Updates the model and normal transforms from the position, scale, and rotation. This must be
     // called after any changes to the ModelInstance properties.

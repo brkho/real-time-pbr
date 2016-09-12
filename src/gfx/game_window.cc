@@ -129,7 +129,6 @@ void gfx::GameWindow::UnsetDirectionalLight() {
   SetDirectionalLight(nullptr);
 }
 
-// Updates the dimensions of the window and recalculates the perspective projection.
 void gfx::GameWindow::UpdateDimensions(int width, int height) {
   glfwSetWindowSize(window, width, height);
   int real_width, real_height;
@@ -138,7 +137,6 @@ void gfx::GameWindow::UpdateDimensions(int width, int height) {
   gfx::GameWindow::UpdatePerspectiveProjection(real_width, real_height);
 }
 
-// Updates the field of view and recalculates the perspective projection.
 void gfx::GameWindow::UpdateFieldOfView(float fov) {
   field_of_view = fov;
   int real_width, real_height;
@@ -146,15 +144,14 @@ void gfx::GameWindow::UpdateFieldOfView(float fov) {
   gfx::GameWindow::UpdatePerspectiveProjection(real_width, real_height);
 }
 
-// Polls the GLFW window for events and invokes the proper callbacks.
 void gfx::GameWindow::PollForEvents() {
   glfwPollEvents();
 }
 
-// This must be called every frame before drawing any ModelInstances to the screen. This sets
-// the state of the OpenGL context so that we can begin drawing the next frame. After this is
-// called, the caller shouldn't change the game state and should only call RenderModel until
-// the render is completed with FinishRender.
+double gfx::GameWindow::GetElapsedTime() {
+  return glfwGetTime();
+}
+
 void gfx::GameWindow::PrepareRender() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   GLint view_location = glGetUniformLocation(program, "view_transform");
@@ -165,20 +162,15 @@ void gfx::GameWindow::PrepareRender() {
   glUniform3fv(camera_location, 1, glm::value_ptr(camera->camera_position));
 }
 
-// Draws a given ModelInstance. Note that this must be called in between a PrepareRender and a
-// a FinishRender.
 void gfx::GameWindow::RenderModel(gfx::ModelInstance* model_instance) {
   model_instance->Draw(program);
 }
 
-// Complets the rendering started by PrepareRender. This swaps the buffer so the rendered image
-// can actually be seen.
 void gfx::GameWindow::FinishRender() {
   glfwSwapBuffers(window);
 }
 
-// Updates the perspective projection with the width, height, and field of view.
 void gfx::GameWindow::UpdatePerspectiveProjection(int width, int height) {
   perspective_projection = glm::perspective(glm::radians(field_of_view),
-      (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+      (GLfloat)width / (GLfloat)height, 0.1f, 1000.0f);
 }

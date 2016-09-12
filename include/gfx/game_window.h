@@ -64,6 +64,9 @@ class GameWindow {
     // Polls the GLFW window for events and invokes the proper callbacks.
     void PollForEvents();
 
+    // Gets the time in seconds since the window was created.
+    double GetElapsedTime();
+
     // This must be called every frame before drawing any ModelInstances to the screen. This sets
     // the state of the OpenGL context so that we can begin drawing the next frame. After this is
     // called, the caller shouldn't change the game state and should only call RenderModel until

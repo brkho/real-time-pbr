@@ -23,10 +23,10 @@ gfx::ModelInfo::ModelInfo(std::string model_path, bool should_map) :
     const aiMesh* assimp_mesh = scene->mMeshes[i];
     std::vector<gfx::Vertex>* vertices = new std::vector<gfx::Vertex>();
     for (unsigned int j = 0; j < assimp_mesh->mNumVertices; ++j) {
-      glm::vec3 position{assimp_mesh->mVertices[j].x, assimp_mesh->mVertices[j].y,
-          assimp_mesh->mVertices[j].z};
-      glm::vec3 normal{assimp_mesh->mNormals[j].x, assimp_mesh->mNormals[j].y,
-          assimp_mesh->mNormals[j].z};
+      glm::vec3 position{assimp_mesh->mVertices[j].x, assimp_mesh->mVertices[j].z,
+          assimp_mesh->mVertices[j].y};
+      glm::vec3 normal{assimp_mesh->mNormals[j].x, assimp_mesh->mNormals[j].z,
+          assimp_mesh->mNormals[j].y};
       gfx::Vertex vertex{position, normal};
       vertices->push_back(vertex);
     }
