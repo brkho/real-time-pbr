@@ -10,6 +10,7 @@
 
 #include "gfx/camera.h"
 #include "gfx/color.h"
+#include "gfx/directional_light.h"
 #include "gfx/model_instance.h"
 
 #include <glad/glad.h>
@@ -54,6 +55,12 @@ class GameWindow {
     // Sets the buffer clear color.
     void SetBufferClearColor(gfx::Color color);
 
+    // Set the directional light, replacing whatever the current directional light is.
+    void SetDirectionalLight(gfx::DirectionalLight* directional_light);
+
+    // Remove the directional light.
+    void UnsetDirectionalLight();
+
     // Polls the GLFW window for events and invokes the proper callbacks.
     void PollForEvents();
 
@@ -80,6 +87,9 @@ class GameWindow {
 
     // The matrix used for the perspective projection.
     glm::mat4 perspective_projection;
+
+    // The directional light of the scene. This will be nullptr if there is no directional light.
+    gfx::DirectionalLight* directional_light;
 
     // Given a path to the shader and a shader type, compile the shader.
     GLuint CompileShader(std::string path, GLenum shader_type);

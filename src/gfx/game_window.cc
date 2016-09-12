@@ -8,30 +8,20 @@
 #include <iostream>
 #include <sstream>
 
-// gfx::Camera* camera;
-// GLFWwindow* window;
-// GLuint program;
-// glm::mat4 perspective_projection;
-
 gfx::GameWindow::GameWindow(int width, int height, std::string vertex_path,
     std::string fragment_path, gfx::Camera* camera, float fov, gfx::Color color) : camera{camera},
-    window{nullptr}, field_of_view{fov}, program{0} {
+    window{nullptr}, field_of_view{fov}, program{0}, directional_light{nullptr} {
   gfx::GameWindow::InitializeGameWindow(width, height, color);
   program = gfx::GameWindow::LinkProgram(vertex_path, fragment_path);
   if (program == 0) {
     throw gfx::GameWindowCannotBeInitializedException();
   }
+  glUseProgram(program);
 }
 
 gfx::GameWindow::GameWindow(int width, int height, std::string vertex_path,
-    std::string fragment_path, gfx::Camera* camera) : camera{camera}, window{nullptr},
-    field_of_view{45.0f}, program{0} {
-  gfx::GameWindow::InitializeGameWindow(width, height, gfx::Color(0.0f, 0.0f, 0.0f));
-  program = gfx::GameWindow::LinkProgram(vertex_path, fragment_path);
-  if (program == 0) {
-    throw gfx::GameWindowCannotBeInitializedException();
-  }
-}
+    std::string fragment_path, gfx::Camera* camera) : GameWindow(width, height, vertex_path,
+    fragment_path, camera, 45.0f, gfx::Color(0.0f, 0.0f, 0.0f)) {}
 
 bool gfx::GameWindow::IsRunning() {
   return !glfwWindowShouldClose(window);
@@ -121,6 +111,24 @@ void gfx::GameWindow::SetBufferClearColor(gfx::Color color) {
   glClearColor(color.r, color.g, color.b, color.a);
 }
 
+void gfx::GameWindow::SetDirectionalLight(gfx::DirectionalLight* di) {
+  directional_light = di;
+  GLint di_enabled_location = glGetUniformLocation(program, "directional_light.enabled");
+  if (directional_light == nullptr) {
+    glUniform1i(di_enabled_location, false);
+    return;
+  }
+  glUniform1i(di_enabled_location, true);
+  GLint di_direction_location = glGetUniformLocation(program, "directional_light.direction");
+  glUniform3fv(di_direction_location, 1, glm::value_ptr(directional_light->direction));
+  GLint di_irradiance_location = glGetUniformLocation(program, "directional_light.irradiance");
+  glUniform3fv(di_irradiance_location, 1, glm::value_ptr(directional_light->irradiance));
+}
+
+void gfx::GameWindow::UnsetDirectionalLight() {
+  SetDirectionalLight(nullptr);
+}
+
 // Updates the dimensions of the window and recalculates the perspective projection.
 void gfx::GameWindow::UpdateDimensions(int width, int height) {
   glfwSetWindowSize(window, width, height);
@@ -148,12 +156,13 @@ void gfx::GameWindow::PollForEvents() {
 // called, the caller shouldn't change the game state and should only call RenderModel until
 // the render is completed with FinishRender.
 void gfx::GameWindow::PrepareRender() {
-  glUseProgram(program);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  GLint view_location = glGetUniformLocation(program, "view");
+  GLint view_location = glGetUniformLocation(program, "view_transform");
   glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(camera->GetViewTransform()));
-  GLint projection_location = glGetUniformLocation(program, "projection");
+  GLint projection_location = glGetUniformLocation(program, "projection_transform");
   glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(perspective_projection));
+  GLint camera_location = glGetUniformLocation(program, "camera_position");
+  glUniform3fv(camera_location, 1, glm::value_ptr(camera->camera_position));
 }
 
 // Draws a given ModelInstance. Note that this must be called in between a PrepareRender and a

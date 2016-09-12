@@ -37,15 +37,21 @@ class ModelInstance {
     ModelInstance(gfx::ModelInfo* model_info, glm::vec3 position, glm::vec3 scale,
         glm::quat rotation);
 
+    // Updates the model and normal transforms from the position, scale, and rotation. This must be
+    // called after any changes to the ModelInstance properties.
+    void Update();
+
     // Draws the ModelInstance to the current OpenGL context given a shader program.
     void Draw(GLuint program);
   private:
+    // The underlying ModelInfo that ther object is an instance of.
     gfx::ModelInfo* model_info;
-    glm::mat4 model_transform;
-    glm::mat4 normal_transform;
 
-    // Calculates the model and normal transforms from the position, scale, and rotation.
-    void CalculateTransforms();
+    // The model transform.
+    glm::mat4 model_transform;
+
+    // The normal transform.
+    glm::mat4 normal_transform;
 };
 
 }

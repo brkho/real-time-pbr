@@ -2,10 +2,11 @@
 // Brian Ho (brian@brkho.com)
 
 // #include "game.h"
+#include "gfx/camera.h"
+#include "gfx/directional_light.h"
+#include "gfx/game_window.h"
 #include "gfx/model_info.h"
 #include "gfx/model_instance.h"
-#include "gfx/camera.h"
-#include "gfx/game_window.h"
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -103,9 +104,14 @@ int main(int /* argc */, char* /* argv */[]) {
   camera = gfx::Camera();
   initialize_camera();
   gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kVertexShaderPath, kFragmentShaderPath,
-      &camera, 45.0f, gfx::Color(0.5f, 0.5f, 0.5f));
-  gfx::ModelInfo model_info = gfx::ModelInfo("assets/sphere.obj", true);
+      &camera, 45.0f, gfx::Color(0.0f, 0.0f, 0.0f));
+  gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f),
+      glm::vec3(1.5f, 1.5f, 1.5f));
+  game_window.SetDirectionalLight(&directional_light);
+  gfx::ModelInfo model_info = gfx::ModelInfo("assets/bunny.obj", true);
   gfx::ModelInstance model_instance = gfx::ModelInstance(&model_info);
+  model_instance.scale = glm::vec3(10.0f, 10.0f, 10.0f);
+  model_instance.Update();
 
   std::fill_n(keys, 1024, 0);
   glfwSetKeyCallback(game_window.window, key_callback);

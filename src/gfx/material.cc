@@ -10,7 +10,7 @@ gfx::Material::Material(std::string diffuse_name, std::string specular_name, gfx
 
 gfx::Material::Material(std::string diffuse_name, std::string specular_name, GLfloat shininess) :
     Material(diffuse_name, specular_name, gfx::Color(1.0f, 1.0f, 1.0f), shininess,
-    0.03f) {}
+    0.15f) {}
 
 gfx::Material::~Material() {
   return;
