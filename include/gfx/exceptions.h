@@ -39,5 +39,13 @@ class GameWindowCannotBeInitializedException : std::exception {
     }
 };
 
+// When the texture manager cannot read the image.
+class CannotLoadTextureException : std::exception {
+  public:
+    const char * what () const throw () {
+      return "Texture cannot be loaded.";
+    }
+};
+
 }
 #endif // GFX_EXCEPTIONS_H

@@ -159,6 +159,7 @@ double gfx::GameWindow::GetElapsedTime() {
 
 void gfx::GameWindow::PrepareRender() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_FRAMEBUFFER_SRGB);
   GLint view_location = glGetUniformLocation(program, "view_transform");
   glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(camera->GetViewTransform()));
   GLint projection_location = glGetUniformLocation(program, "projection_transform");

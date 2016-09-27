@@ -20,3 +20,12 @@ void gfx::Material::UseMaterial(GLuint program) {
   GLint shininess_location = glGetUniformLocation(program, "shininess");
   glUniform1f(shininess_location, shininess);
 }
+
+void gfx::Material::RemoveTexture(GLuint id) {
+  if (diffuse_handle == id) {
+    diffuse_handle = 0;
+  }
+  if (specular_handle == id) {
+    specular_handle = 0;
+  }
+}

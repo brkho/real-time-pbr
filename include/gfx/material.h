@@ -37,6 +37,9 @@ class Material {
     // Uses the material for rendering the current model given a handle to the shader program.
     void UseMaterial(GLuint program);
 
+    // Unregisters the given texture handle from any of the material's texture handles.
+    void RemoveTexture(GLuint id);
+
   private:
     // The OpenGL handle to the diffuse texture.
     GLuint diffuse_handle;
