@@ -13,6 +13,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
+#include <memory>
 #include <vector>
 
 namespace gfx {
@@ -23,6 +24,8 @@ struct Vertex {
   glm::vec3 position;
   // Normal of the vertex.
   glm::vec3 normal;
+  // UV coordinate of the vertex.
+  glm::vec2 uv;
 };
 
 class Mesh : public gfx::Mappable {
@@ -35,11 +38,12 @@ class Mesh : public gfx::Mappable {
     // Stores the integer handle to an OpenGL managed EBO and is 0 if unmapped.
     GLuint ebo;
     // The material of the mesh.
-    gfx::Material material;
+    std::shared_ptr<gfx::Material> material;
 
     // Create a Mesh with a list of verticies and indices. The should_map param specifies whether
     // Map() should be called immediately by the constructor.
-    Mesh(std::vector<Vertex>* vertices, std::vector<GLuint>* indices, bool should_map);
+    Mesh(std::vector<Vertex>* vertices, std::vector<GLuint>* indices,
+        std::shared_ptr<gfx::Material> material, bool should_map);
 
     // Destroys the Mesh by unmapping and freeing the vertex and index vectors.
     ~Mesh();

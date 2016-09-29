@@ -4,9 +4,9 @@
 
 #include <iostream>
 
-gfx::Mesh::Mesh(std::vector<gfx::Vertex>* vertices, std::vector<GLuint>* indices, bool should_map) :
-    vao{0}, vbo{0}, ebo{0}, material{gfx::Material("diffuse", "specular", 75.0f)},
-    vertices{vertices}, indices{indices} {
+gfx::Mesh::Mesh(std::vector<gfx::Vertex>* vertices, std::vector<GLuint>* indices,
+    std::shared_ptr<gfx::Material> material, bool should_map) : vao{0}, vbo{0}, ebo{0},
+    material{material}, vertices{vertices}, indices{indices} {
   if (should_map) {
     gfx::Mesh::Map();
   }
@@ -50,6 +50,9 @@ void gfx::Mesh::Map() {
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
       (GLvoid*) offsetof(Vertex, normal));
   glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+      (GLvoid*) offsetof(Vertex, uv));
+  glEnableVertexAttribArray(2);
 
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);

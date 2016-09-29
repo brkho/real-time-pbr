@@ -7,20 +7,19 @@
 
 #include <iostream>
 
-gfx::TextureManager::TextureManager() : path_to_id_map(), id_to_materials_map() {}
+gfx::TextureManager::TextureManager() : path_to_id_map() {}
 
-GLuint gfx::TextureManager::GetTextureHandle(std::string path, gfx::Material* material) {
+GLuint gfx::TextureManager::GetTextureHandle(std::string path) {
   // If we have already loaded this texture, simply return the cached ID.
   auto path_it = path_to_id_map.find(path);
   if (path_it != path_to_id_map.end()) {
-    id_to_materials_map[path_it->second].insert(material);
     return path_it->second;
   }
 
   // Load the image.
   int width, height, bits_per_pixel;
   unsigned char* image_data = stbi_load(path.c_str(), &width, &height, &bits_per_pixel, 0);
-  if (width == 0 || height == 0) {
+  if (image_data == nullptr) {
     throw gfx::CannotLoadTextureException();
   }
 
@@ -28,22 +27,27 @@ GLuint gfx::TextureManager::GetTextureHandle(std::string path, gfx::Material* ma
   GLuint texture;
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(image_data);
   glBindTexture(GL_TEXTURE_2D, 0);
-  id_to_materials_map[texture].insert(material);
   path_to_id_map[path] = texture;
   return texture;
 }
 
 void gfx::TextureManager::FreeTexture(GLuint id) {
-  auto id_it = id_to_materials_map.find(id);
-  if (id_it != id_to_materials_map.end()) {
-    auto materials = id_it->second;
-    for (auto material = materials.begin(); material != materials.end(); material++) {
-      (*material)->RemoveTexture(id);
+  for (auto it = path_to_id_map.begin(); it != path_to_id_map.end(); ++it) {
+    if (it->second == id) {
+      path_to_id_map.erase(it);
+      break;
     }
-    id_to_materials_map.erase(id);
   }
+  glDeleteTextures(1, &id);
 }

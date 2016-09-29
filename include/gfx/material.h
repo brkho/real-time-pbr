@@ -21,15 +21,15 @@ class Material {
     // The ambient lighting coefficient.
     GLfloat ambient_coefficient;
 
-    // Constructs a material with a path to the diffuse texture, a path to the specular texture,
-    // a base color, and the shininess as a float, and an ambient lighting coefficient.
-    Material(std::string diffuse_name, std::string specular_name, GLfloat shininess,
-        GLfloat ambient);
+    // Constructs a material with an OpenGL handle to a diffuse texture, an OpenGL handle to a
+    // specular texture, the shininess as a float, and an ambient lighting coefficient. Use handles
+    // of 0 to use no texture.
+    Material(GLuint diffuse_handle, GLuint specular_handle, GLfloat shininess, GLfloat ambient);
 
-    // Constructs a material with a path to the diffuse texture, a path to the specular texture,
-    // and the shininess as a float. This initializes the ambient lighting coefficient to 0.03 and
-    // the base color to white.
-    Material(std::string diffuse_name, std::string specular_name, GLfloat shininess);
+    // Constructs a material with an OpenGL handle to a diffuse texture, an OpenGL handle to a
+    // specular texture, and the shininess as a float. Use handles of 0 to use no texture. This
+    // initializes the ambient lighting coefficient to 0.03 and the base color to white.
+    Material(GLuint diffuse_handle, GLuint specular_handle, GLfloat shininess);
 
     // Destroys the material by clearing the diffuse texture and the specular texture.
     ~Material();

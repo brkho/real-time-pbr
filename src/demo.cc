@@ -7,6 +7,7 @@
 #include "gfx/game_window.h"
 #include "gfx/model_info.h"
 #include "gfx/model_instance.h"
+#include "gfx/texture_manager.h"
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -111,19 +112,20 @@ int main(int /* argc */, char* /* argv */[]) {
       glm::vec3(2.5f, 2.5f, 2.5f));
   game_window.SetDirectionalLight(&directional_light);
 
-  gfx::ModelInfo dragon_info = gfx::ModelInfo("assets/dragon.obj", true);
-  gfx::ModelInstance dragon_instance = gfx::ModelInstance(&dragon_info,
-      glm::vec3(0.0f, -2.5f, 0.0f));
-  dragon_instance.scale = glm::vec3(0.1f, 0.1f, 0.1f);
-  dragon_instance.color = gfx::Color(1.0f, 0.0f, 1.0f);
-  dragon_instance.Update();
+  gfx::TextureManager texture_manager;
 
-  gfx::ModelInfo buddha_info = gfx::ModelInfo("assets/buddha.obj", true);
-  gfx::ModelInstance buddha_instance = gfx::ModelInstance(&buddha_info,
-      glm::vec3(0.0f, 2.5f, 0.0f));
-  buddha_instance.scale = glm::vec3(0.1f, 0.1f, 0.1f);
-  buddha_instance.color = gfx::Color(1.0f, 0.0f, 0.0f);
-  buddha_instance.Update();
+  gfx::ModelInfo prism_info = gfx::ModelInfo("assets/prism.fbx", &texture_manager, true);
+  gfx::ModelInstance prism_instance = gfx::ModelInstance(&prism_info,
+      glm::vec3(0.0f, 0.0f, 0.0f));
+  prism_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+  prism_instance.Update();
+
+  // gfx::ModelInfo buddha_info = gfx::ModelInfo("assets/buddha.obj", true);
+  // gfx::ModelInstance buddha_instance = gfx::ModelInstance(&buddha_info,
+  //     glm::vec3(0.0f, 2.5f, 0.0f));
+  // buddha_instance.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+  // buddha_instance.color = gfx::Color(1.0f, 0.0f, 0.0f);
+  // buddha_instance.Update();
 
   std::fill_n(keys, 1024, 0);
   glfwSetKeyCallback(game_window.window, key_callback);
@@ -153,8 +155,7 @@ int main(int /* argc */, char* /* argv */[]) {
     update_camera();
 
     game_window.PrepareRender();
-    game_window.RenderModel(&dragon_instance);
-    game_window.RenderModel(&buddha_instance);
+    game_window.RenderModel(&prism_instance);
     game_window.FinishRender();
   }
 

@@ -32,7 +32,7 @@ void gfx::ModelInstance::Draw(GLuint program) {
   // Draw all meshes.
   for (auto &mesh : model_info->meshes) {
     glBindVertexArray(mesh.vao);
-    mesh.material.UseMaterial(program);
+    mesh.material->UseMaterial(program);
     glDrawElements(GL_TRIANGLES, mesh.GetNumberOfIndices(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
   }
