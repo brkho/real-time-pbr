@@ -120,6 +120,18 @@ int main(int /* argc */, char* /* argv */[]) {
   prism_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
   prism_instance.Update();
 
+  // gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);
+  // gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
+  //     glm::vec3(0.0f, 0.0f, 0.0f));
+  // box_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+  // box_instance.Update();
+
+  // gfx::ModelInfo cylinder_info = gfx::ModelInfo("assets/plane.fbx", &texture_manager, true);
+  // gfx::ModelInstance cylinder_instance = gfx::ModelInstance(&cylinder_info,
+  //     glm::vec3(0.0f, 0.0f, 0.0f));
+  // // cylinder_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+  // cylinder_instance.Update();
+
   // gfx::ModelInfo buddha_info = gfx::ModelInfo("assets/buddha.obj", true);
   // gfx::ModelInstance buddha_instance = gfx::ModelInstance(&buddha_info,
   //     glm::vec3(0.0f, 2.5f, 0.0f));
@@ -147,14 +159,18 @@ int main(int /* argc */, char* /* argv */[]) {
     last_time = current_time;
 
     // Move the light in a circle.
-    // directional_light.direction = glm::vec3(sin(current_time), cos(current_time), 1.0f);
-    // game_window.UpdateDirectionalLight();
+    // box_instance.position = glm::vec3(-sin(current_time) * 5.0, -cos(current_time) * 5.0, 0.0f);
+    // box_instance.Update();
+
+    directional_light.direction = glm::vec3(sin(current_time), cos(current_time), 0.0f);
+    game_window.UpdateDirectionalLight();
 
     game_window.PollForEvents();
     handle_input(game_window.window);
     update_camera();
 
     game_window.PrepareRender();
+    // game_window.RenderModel(&box_instance);
     game_window.RenderModel(&prism_instance);
     game_window.FinishRender();
   }

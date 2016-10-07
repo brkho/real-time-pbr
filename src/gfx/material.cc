@@ -19,6 +19,13 @@ void gfx::Material::UseMaterial(GLuint program) {
   GLint shininess_location = glGetUniformLocation(program, "shininess");
   glUniform1f(shininess_location, shininess);
   glBindTexture(GL_TEXTURE_2D, diffuse_handle);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, diffuse_handle);
+  glUniform1i(glGetUniformLocation(program, "diffuse_texture"), 0);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, specular_handle);
+  glUniform1i(glGetUniformLocation(program, "specular_texture"), 1);
 }
 
 void gfx::Material::RemoveTexture(GLuint id) {

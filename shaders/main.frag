@@ -14,6 +14,7 @@ uniform float shininess;
 uniform vec4 base_color;
 uniform vec3 camera_position;
 uniform sampler2D diffuse_texture;
+uniform sampler2D specular_texture;
 
 in vec3 Normal;
 in vec2 UV;
@@ -40,8 +41,10 @@ void main() {
 
     float adjusted_shininess = (shininess + 8.0) / (8.0 * PI);
     vec3 half_angle_vector = normalize(normalized_direction + view_vector);
-    vec3 specular = (adjusted_shininess * pow(clamped_cosine(Normal, half_angle_vector), shininess) *
-        vec3(1.0, 1.0, 1.0)) * incoming_irradiance; // Put texture here.
+    vec3 specular_color = vec3(texture(specular_texture, UV));
+    vec3 specular = (adjusted_shininess *
+        pow(clamped_cosine(Normal, half_angle_vector), shininess) * specular_color) *
+        incoming_irradiance;
     total_color += vec4(specular, base_color.w);
   }
   // out_color = vec4(UV, 1.0, 1.0);

@@ -6,6 +6,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
+#include <cmath>
 #include <iostream>
 #include <memory>
 
@@ -22,7 +23,7 @@ gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, 
   for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
     const aiMesh* assimp_mesh = scene->mMeshes[i];
     const aiMaterial* assimp_material = scene->mMaterials[assimp_mesh->mMaterialIndex];
-    float shininess;
+    float shininess = 35.0f;
     assimp_material->Get(AI_MATKEY_SHININESS, shininess);
     GLuint diffuse_handle = LoadTexture(assimp_material, aiTextureType_DIFFUSE, manager);
     GLuint specular_handle = LoadTexture(assimp_material, aiTextureType_SPECULAR, manager);

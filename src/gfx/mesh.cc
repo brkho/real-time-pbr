@@ -57,7 +57,6 @@ void gfx::Mesh::Map() {
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
 }
 
 void gfx::Mesh::Unmap() {
