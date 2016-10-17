@@ -7,6 +7,7 @@
 #include "gfx/game_window.h"
 #include "gfx/model_info.h"
 #include "gfx/model_instance.h"
+#include "gfx/point_light.h"
 #include "gfx/texture_manager.h"
 
 #include <glm/glm.hpp>
@@ -108,9 +109,13 @@ int main(int /* argc */, char* /* argv */[]) {
   initialize_camera();
   gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kVertexShaderPath, kFragmentShaderPath,
       &camera, 45.0f, gfx::Color(0.15f, 0.15f, 0.15f));
-  gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
-      glm::vec3(2.5f, 2.5f, 2.5f));
-  game_window.SetDirectionalLight(&directional_light);
+  // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
+  //     glm::vec3(2.5f, 2.5f, 2.5f));
+  // game_window.SetDirectionalLight(&directional_light);
+
+  gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.14f,
+      0.07f, glm::vec3(2.5f, 2.5f, 2.5f));
+  game_window.AddPointLight(&first_point_light);
 
   gfx::TextureManager texture_manager;
 
@@ -120,11 +125,11 @@ int main(int /* argc */, char* /* argv */[]) {
   prism_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
   prism_instance.Update();
 
-  // gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);
-  // gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
-  //     glm::vec3(0.0f, 0.0f, 0.0f));
-  // box_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-  // box_instance.Update();
+  gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);
+  gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
+      glm::vec3(0.0f, 0.0f, 0.0f));
+  box_instance.scale = glm::vec3(0.2f, 0.2f, 0.2f);
+  box_instance.Update();
 
   // gfx::ModelInfo cylinder_info = gfx::ModelInfo("assets/plane.fbx", &texture_manager, true);
   // gfx::ModelInstance cylinder_instance = gfx::ModelInstance(&cylinder_info,
@@ -159,18 +164,20 @@ int main(int /* argc */, char* /* argv */[]) {
     last_time = current_time;
 
     // Move the light in a circle.
-    // box_instance.position = glm::vec3(-sin(current_time) * 5.0, -cos(current_time) * 5.0, 0.0f);
-    // box_instance.Update();
+    float x_pos = -sin(current_time) * 2.0;
+    float y_pos = -cos(current_time) * 2.0;
+    box_instance.position = glm::vec3(x_pos, y_pos, 2.0f);
+    box_instance.Update();
 
-    directional_light.direction = glm::vec3(sin(current_time), cos(current_time), 0.0f);
-    game_window.UpdateDirectionalLight();
+    first_point_light.position = glm::vec3(x_pos, y_pos, 2.0f);
+    game_window.UpdatePointLight(&first_point_light);
 
     game_window.PollForEvents();
     handle_input(game_window.window);
     update_camera();
 
     game_window.PrepareRender();
-    // game_window.RenderModel(&box_instance);
+    game_window.RenderModel(&box_instance);
     game_window.RenderModel(&prism_instance);
     game_window.FinishRender();
   }

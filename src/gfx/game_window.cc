@@ -7,10 +7,14 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 gfx::GameWindow::GameWindow(int width, int height, std::string vertex_path,
     std::string fragment_path, gfx::Camera* camera, float fov, gfx::Color color) : camera{camera},
     window{nullptr}, field_of_view{fov}, program{0}, directional_light{nullptr} {
+  for (unsigned int i = 0; i < gfx::MAX_POINT_LIGHTS; i++) {
+    point_lights[i] = nullptr;
+  }
   gfx::GameWindow::InitializeGameWindow(width, height, color);
   program = gfx::GameWindow::LinkProgram(vertex_path, fragment_path);
   if (program == 0) {
@@ -125,13 +129,70 @@ void gfx::GameWindow::UpdateDirectionalLight() {
   GLint di_enabled_location = glGetUniformLocation(program, "directional_light.enabled");
   glUniform1i(di_enabled_location, true);
   GLint di_direction_location = glGetUniformLocation(program, "directional_light.direction");
-  glUniform3fv(di_direction_location, 1, glm::value_ptr(directional_light->direction));
+  glm::vec3 normalized_direction = glm::normalize(directional_light->direction);
+  glUniform3fv(di_direction_location, 1, glm::value_ptr(normalized_direction));
   GLint di_irradiance_location = glGetUniformLocation(program, "directional_light.irradiance");
   glUniform3fv(di_irradiance_location, 1, glm::value_ptr(directional_light->irradiance));
 }
 
 void gfx::GameWindow::UnsetDirectionalLight() {
   SetDirectionalLight(nullptr);
+}
+
+unsigned int gfx::GameWindow::GetAndValidatePointLightIndex(gfx::PointLight* point_light) {
+  auto reverse_it = point_lights_reverse.find(point_light);
+  if (reverse_it == point_lights_reverse.end()) {
+    throw gfx::InvalidLightException();
+  }
+  return reverse_it->second;
+}
+
+void gfx::GameWindow::AddPointLight(gfx::PointLight* point_light) {
+  // Trying to add the same point light twice.
+  auto reverse_it = point_lights_reverse.find(point_light);
+  if (reverse_it != point_lights_reverse.end()) {
+    throw gfx::InvalidLightException();
+  }
+
+  int free_index = -1;
+  for (unsigned int i = 0; i < gfx::MAX_POINT_LIGHTS; i++) {
+    if (point_lights[i] == nullptr) {
+      free_index = i;
+      break;
+    }
+  }
+  if (free_index == -1) {
+    throw gfx::TooManyLightsException();
+  }
+  point_lights_reverse[point_light] = free_index;
+  point_lights[free_index] = point_light;
+  UpdatePointLight(point_light);
+}
+
+void gfx::GameWindow::RemovePointLight(gfx::PointLight* point_light) {
+  unsigned int index = GetAndValidatePointLightIndex(point_light);
+  std::string light_base = "point_lights[" + std::to_string(index) + "].";
+  GLint enabled_location = glGetUniformLocation(program, (light_base + "enabled").c_str());
+  glUniform1i(enabled_location, false);
+  point_lights_reverse.erase(point_light);
+  point_lights[index] = nullptr;
+}
+
+void gfx::GameWindow::UpdatePointLight(gfx::PointLight* point_light) {
+  unsigned int index = GetAndValidatePointLightIndex(point_light);
+  std::string light_base = "point_lights[" + std::to_string(index) + "].";
+  GLint enabled_location = glGetUniformLocation(program, (light_base + "enabled").c_str());
+  glUniform1i(enabled_location, true);
+  GLint position_location = glGetUniformLocation(program, (light_base + "position").c_str());
+  glUniform3fv(position_location, 1, glm::value_ptr(point_lights[index]->position));
+  GLint irradiance_location = glGetUniformLocation(program, (light_base + "irradiance").c_str());
+  glUniform3fv(irradiance_location, 1, glm::value_ptr(point_lights[index]->irradiance));
+  GLint const_atten_location = glGetUniformLocation(program, (light_base + "const_atten").c_str());
+  glUniform1f(const_atten_location, point_lights[index]->const_atten);
+  GLint lin_atten_location = glGetUniformLocation(program, (light_base + "linear_atten").c_str());
+  glUniform1f(lin_atten_location, point_lights[index]->linear_atten);
+  GLint quad_atten_location = glGetUniformLocation(program, (light_base + "quad_atten").c_str());
+  glUniform1f(quad_atten_location, point_lights[index]->quad_atten);
 }
 
 void gfx::GameWindow::UpdateDimensions(int width, int height) {

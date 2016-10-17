@@ -40,8 +40,8 @@ void gfx::ModelInstance::Draw(GLuint program) {
 
 void gfx::ModelInstance::Update() {
   model_transform = glm::mat4();
+  model_transform = glm::translate(model_transform, position);
   model_transform = glm::scale(model_transform, scale);
   model_transform = glm::mat4_cast(rotation) * model_transform;
-  model_transform = glm::translate(model_transform, position);
   normal_transform = glm::transpose(glm::inverse(model_transform));
 }

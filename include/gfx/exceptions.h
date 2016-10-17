@@ -47,5 +47,21 @@ class CannotLoadTextureException : std::exception {
     }
 };
 
+// When there are too many lights in the scene (over gfx::MAX_POINT_LIGHTS).
+class TooManyLightsException : std::exception {
+  public:
+    const char * what () const throw () {
+      return "Too many lights in the scene.";
+    }
+};
+
+// When there is an invalid access of the lights array.
+class InvalidLightException : std::exception {
+  public:
+    const char * what () const throw () {
+      return "Invalid access of light array.";
+    }
+};
+
 }
 #endif // GFX_EXCEPTIONS_H

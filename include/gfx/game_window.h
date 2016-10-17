@@ -10,14 +10,17 @@
 
 #include "gfx/camera.h"
 #include "gfx/color.h"
+#include "gfx/constants.h"
 #include "gfx/directional_light.h"
 #include "gfx/model_instance.h"
+#include "gfx/point_light.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
 #include <string>
+#include <unordered_map>
 
 namespace gfx {
 
@@ -64,6 +67,16 @@ class GameWindow {
     // Updates the directional light uniform.
     void UpdateDirectionalLight();
 
+    // Adds a point light to the scene.
+    void AddPointLight(gfx::PointLight* point_light);
+
+    // Removes a point light from the scene.
+    void RemovePointLight(gfx::PointLight* point_light);
+
+    // Updates a point light. This must be called after any changes to the point light's fields for
+    // it to be reflected for rendering in the engine.
+    void UpdatePointLight(gfx::PointLight* point_light);
+
     // Polls the GLFW window for events and invokes the proper callbacks.
     void PollForEvents();
 
@@ -97,6 +110,12 @@ class GameWindow {
     // The directional light of the scene. This will be nullptr if there is no directional light.
     gfx::DirectionalLight* directional_light;
 
+    // The array of pointers to point lights.
+    gfx::PointLight* point_lights[gfx::MAX_POINT_LIGHTS];
+
+    // An associative array mapping pointers to point lights back to an index into point_lights.
+    std::unordered_map<gfx::PointLight*, unsigned int> point_lights_reverse;
+
     // Given a path to the shader and a shader type, compile the shader.
     GLuint CompileShader(std::string path, GLenum shader_type);
 
@@ -109,6 +128,10 @@ class GameWindow {
 
     // Updates the perspective projection with the width, height, and field of view.
     void UpdatePerspectiveProjection(int width, int height);
+
+    // Helper function to find the index of a point light using the reverse map. This throws if the
+    // point light is not yet added.
+    unsigned int GetAndValidatePointLightIndex(gfx::PointLight* point_light);
 };
 
 }
