@@ -109,40 +109,31 @@ int main(int /* argc */, char* /* argv */[]) {
   initialize_camera();
   gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kVertexShaderPath, kFragmentShaderPath,
       &camera, 45.0f, gfx::Color(0.15f, 0.15f, 0.15f));
-  // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
-  //     glm::vec3(2.5f, 2.5f, 2.5f));
-  // game_window.SetDirectionalLight(&directional_light);
+  gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
+      glm::vec3(1.0f, 1.0f, 1.0f));
+  game_window.SetDirectionalLight(&directional_light);
 
-  gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.14f,
-      0.07f, glm::vec3(2.5f, 2.5f, 2.5f));
+  gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.003f,
+      0.0004f, glm::vec3(1.0f, 1.0f, 1.0f));
   game_window.AddPointLight(&first_point_light);
+
+  // gfx::PointLight second_point_light = gfx::PointLight(glm::vec3(2.0f, 2.0f, 0.0f), 1.0f, 0.14f,
+  //     0.07f, glm::vec3(2.5f, 2.5f, 2.5f));
+  // game_window.AddPointLight(&second_point_light);
 
   gfx::TextureManager texture_manager;
 
-  gfx::ModelInfo prism_info = gfx::ModelInfo("assets/prism.fbx", &texture_manager, true);
+  gfx::ModelInfo prism_info = gfx::ModelInfo("assets/stone_floor.fbx", &texture_manager, true);
   gfx::ModelInstance prism_instance = gfx::ModelInstance(&prism_info,
       glm::vec3(0.0f, 0.0f, 0.0f));
-  prism_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+  prism_instance.scale = glm::vec3(20.0f, 20.0f, 1.0f);
   prism_instance.Update();
 
   gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);
   gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
       glm::vec3(0.0f, 0.0f, 0.0f));
-  box_instance.scale = glm::vec3(0.2f, 0.2f, 0.2f);
+  box_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
   box_instance.Update();
-
-  // gfx::ModelInfo cylinder_info = gfx::ModelInfo("assets/plane.fbx", &texture_manager, true);
-  // gfx::ModelInstance cylinder_instance = gfx::ModelInstance(&cylinder_info,
-  //     glm::vec3(0.0f, 0.0f, 0.0f));
-  // // cylinder_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-  // cylinder_instance.Update();
-
-  // gfx::ModelInfo buddha_info = gfx::ModelInfo("assets/buddha.obj", true);
-  // gfx::ModelInstance buddha_instance = gfx::ModelInstance(&buddha_info,
-  //     glm::vec3(0.0f, 2.5f, 0.0f));
-  // buddha_instance.scale = glm::vec3(0.1f, 0.1f, 0.1f);
-  // buddha_instance.color = gfx::Color(1.0f, 0.0f, 0.0f);
-  // buddha_instance.Update();
 
   std::fill_n(keys, 1024, 0);
   glfwSetKeyCallback(game_window.window, key_callback);
@@ -164,12 +155,12 @@ int main(int /* argc */, char* /* argv */[]) {
     last_time = current_time;
 
     // Move the light in a circle.
-    float x_pos = -sin(current_time) * 2.0;
-    float y_pos = -cos(current_time) * 2.0;
-    box_instance.position = glm::vec3(x_pos, y_pos, 2.0f);
+    float x_pos = -sin(current_time) * 10.0;
+    float y_pos = -cos(current_time) * 10.0;
+    box_instance.position = glm::vec3(x_pos, y_pos, 1.0f);
     box_instance.Update();
 
-    first_point_light.position = glm::vec3(x_pos, y_pos, 2.0f);
+    first_point_light.position = glm::vec3(x_pos, y_pos, 1.0f);
     game_window.UpdatePointLight(&first_point_light);
 
     game_window.PollForEvents();

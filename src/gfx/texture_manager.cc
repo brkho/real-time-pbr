@@ -9,7 +9,7 @@
 
 gfx::TextureManager::TextureManager() : path_to_id_map() {}
 
-GLuint gfx::TextureManager::GetTextureHandle(std::string path) {
+GLuint gfx::TextureManager::GetTextureHandle(std::string path, bool convert_to_linear) {
   // If we have already loaded this texture, simply return the cached ID.
   auto path_it = path_to_id_map.find(path);
   if (path_it != path_to_id_map.end()) {
@@ -19,6 +19,8 @@ GLuint gfx::TextureManager::GetTextureHandle(std::string path) {
   // Load the image.
   int width, height, bits_per_pixel;
   unsigned char* image_data = stbi_load(path.c_str(), &width, &height, &bits_per_pixel, 0);
+  std::cout << path << std::endl;
+  std::cout << (int)image_data[0] << ", " << (int)image_data[1] << ", " << (int)image_data[2] << ", " << (int)image_data[3] << std::endl;
   if (image_data == nullptr) {
     throw gfx::CannotLoadTextureException();
   }
@@ -34,7 +36,8 @@ GLuint gfx::TextureManager::GetTextureHandle(std::string path) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+  GLenum format = convert_to_linear ? GL_SRGB : GL_RGB;
+  glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(image_data);
   glBindTexture(GL_TEXTURE_2D, 0);

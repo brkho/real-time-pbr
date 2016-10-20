@@ -22,9 +22,10 @@ class TextureManager {
     // Default constructor that initializes its members.
     TextureManager();
 
-    // Load the image given by the path argument and set it up as a texture in OpenGL. This returns
-    // the OpenGL texture handle associated with the texture.
-    GLuint GetTextureHandle(std::string path);
+    // Load the image given by the path argument and set it up as a texture in OpenGL. This also
+    // specifies a boolean to convert the sRGB texture into linear space when loading into OpenGL.
+    // This returns the OpenGL texture handle associated with the texture.
+    GLuint GetTextureHandle(std::string path, bool convert_to_linear);
 
     // Frees the OpenGL texture data for a given integer handle and updates all Materials that
     // depend on it to point to the null texture instead.

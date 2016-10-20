@@ -25,8 +25,9 @@ gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, 
     const aiMaterial* assimp_material = scene->mMaterials[assimp_mesh->mMaterialIndex];
     float shininess = 35.0f;
     assimp_material->Get(AI_MATKEY_SHININESS, shininess);
-    GLuint diffuse_handle = LoadTexture(assimp_material, aiTextureType_DIFFUSE, manager);
-    GLuint specular_handle = LoadTexture(assimp_material, aiTextureType_SPECULAR, manager);
+    GLuint diffuse_handle = LoadTexture(assimp_material, aiTextureType_DIFFUSE, true, manager);
+    GLuint specular_handle = LoadTexture(assimp_material, aiTextureType_SPECULAR, true, manager);
+    GLuint normal_handle = LoadTexture(assimp_material, aiTextureType_NORMALS, false, manager);
     std::shared_ptr<gfx::Material> material(new gfx::Material(
         diffuse_handle, specular_handle, shininess));
 
@@ -54,11 +55,11 @@ gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, 
 }
 
 GLuint gfx::ModelInfo::LoadTexture(const aiMaterial* material, aiTextureType type,
-    gfx::TextureManager* manager) {
+    bool convert_to_linear, gfx::TextureManager* manager) {
   aiString path_struct;
   material->GetTexture(type, 0, &path_struct, nullptr, nullptr, nullptr, nullptr, nullptr);
   std::string path(path_struct.data);
-  return path.length() == 0 ? 0 : manager->GetTextureHandle(assets_path + path);
+  return path.length() == 0 ? 0 : manager->GetTextureHandle(assets_path + path, convert_to_linear);
 }
 
 gfx::ModelInfo::~ModelInfo() {

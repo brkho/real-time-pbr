@@ -56,7 +56,9 @@ class ModelInfo : public gfx::Mappable {
   private:
     // Loads a texture from an assimp material given a texture type by using a TextureManager. This
     // loads the texture from file into OpenGL managed memory and returns a handle to the texture.
-    GLuint LoadTexture(const aiMaterial* material, aiTextureType type,
+    // This also takes a boolean specifying whether we should gamma correct the sRGB texture into
+    // linear space when loading into OpenGL.
+    GLuint LoadTexture(const aiMaterial* material, aiTextureType type, bool convert_to_linear,
         gfx::TextureManager* manager);
 };
 

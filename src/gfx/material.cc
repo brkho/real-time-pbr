@@ -18,14 +18,23 @@ void gfx::Material::UseMaterial(GLuint program) {
   glUniform1f(ambient_location, ambient_coefficient);
   GLint shininess_location = glGetUniformLocation(program, "shininess");
   glUniform1f(shininess_location, shininess);
-  glBindTexture(GL_TEXTURE_2D, diffuse_handle);
 
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, diffuse_handle);
-  glUniform1i(glGetUniformLocation(program, "diffuse_texture"), 0);
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, specular_handle);
-  glUniform1i(glGetUniformLocation(program, "specular_texture"), 1);
+  GLint diffuse_enabled_location = glGetUniformLocation(program, "diffuse_enabled");
+  glUniform1i(diffuse_enabled_location, diffuse_handle != 0);
+  if (diffuse_handle != 0) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuse_handle);
+    glUniform1i(glGetUniformLocation(program, "diffuse_texture"), 0);
+  }
+
+  GLint specular_enabled_location = glGetUniformLocation(program, "specular_enabled");
+  std::cout << "specular_enabled " << (specular_handle != 0) << std::endl;
+  glUniform1i(specular_enabled_location, specular_handle != 0);
+  if (specular_handle != 0) {
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, specular_handle);
+    glUniform1i(glGetUniformLocation(program, "specular_texture"), 1);
+  }
 }
 
 void gfx::Material::RemoveTexture(GLuint id) {
