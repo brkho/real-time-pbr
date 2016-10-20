@@ -29,7 +29,7 @@ gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, 
     GLuint specular_handle = LoadTexture(assimp_material, aiTextureType_SPECULAR, true, manager);
     GLuint normal_handle = LoadTexture(assimp_material, aiTextureType_NORMALS, false, manager);
     std::shared_ptr<gfx::Material> material(new gfx::Material(
-        diffuse_handle, specular_handle, shininess));
+        diffuse_handle, specular_handle, normal_handle, shininess));
 
     std::vector<gfx::Vertex>* vertices = new std::vector<gfx::Vertex>();
     for (unsigned int j = 0; j < assimp_mesh->mNumVertices; ++j) {

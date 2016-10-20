@@ -24,14 +24,14 @@ class Material {
     // Constructs a material with an OpenGL handle to a diffuse texture, an OpenGL handle to a
     // specular texture, an OpenGL handle to a normal map, the shininess as a float, and an ambient
     // lighting coefficient. Use handles of 0 to use no texture.
-    Material(GLuint diffuse_handle, GLuint specular_handle,
+    Material(GLuint diffuse_handle, GLuint specular_handle, GLuint normal_handle,
         GLfloat shininess, GLfloat ambient);
 
     // Constructs a material with an OpenGL handle to a diffuse texture, an OpenGL handle to a
     // specular texture, an OpenGL handle to a normal map, and the shininess as a float. Use
     // handles of 0 to use no texture. This initializes the ambient lighting coefficient to 0.03
     // and the base color to white.
-    Material(GLuint diffuse_handle, GLuint specular_handle,
+    Material(GLuint diffuse_handle, GLuint specular_handle, GLuint normal_handle,
         GLfloat shininess);
 
     // Destroys the material by clearing the diffuse texture and the specular texture.
@@ -48,6 +48,8 @@ class Material {
     GLuint diffuse_handle;
     // The OpenGL handle to the specular texture.
     GLuint specular_handle;
+    // The OpenGL handle to the normal map.
+    GLuint normal_handle;
 };
 
 }

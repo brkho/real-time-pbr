@@ -19,8 +19,6 @@ GLuint gfx::TextureManager::GetTextureHandle(std::string path, bool convert_to_l
   // Load the image.
   int width, height, bits_per_pixel;
   unsigned char* image_data = stbi_load(path.c_str(), &width, &height, &bits_per_pixel, 0);
-  std::cout << path << std::endl;
-  std::cout << (int)image_data[0] << ", " << (int)image_data[1] << ", " << (int)image_data[2] << ", " << (int)image_data[3] << std::endl;
   if (image_data == nullptr) {
     throw gfx::CannotLoadTextureException();
   }
