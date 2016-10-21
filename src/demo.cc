@@ -127,6 +127,7 @@ int main(int /* argc */, char* /* argv */[]) {
   gfx::ModelInstance prism_instance = gfx::ModelInstance(&prism_info,
       glm::vec3(0.0f, 0.0f, 0.0f));
   prism_instance.scale = glm::vec3(20.0f, 20.0f, 1.0f);
+  // prism_instance.rotation = glm::quat(0.70711f, 0.0f, 0.70711f, 0.0f);
   prism_instance.Update();
 
   gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);

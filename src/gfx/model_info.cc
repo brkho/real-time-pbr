@@ -13,8 +13,8 @@
 gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, bool should_map) :
     meshes{std::vector<gfx::Mesh>()} {
   Assimp::Importer importer;
-  const aiScene* scene = importer.ReadFile(model_path,
-      aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+  const aiScene* scene = importer.ReadFile(model_path, aiProcess_Triangulate | aiProcess_FlipUVs |
+      aiProcess_GenNormals | aiProcess_CalcTangentSpace);
   if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
     std::cout << "Assimp error: " << importer.GetErrorString() << std::endl;
     throw gfx::AssimpInvalidFileException();
@@ -37,9 +37,11 @@ gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, 
           assimp_mesh->mVertices[j].y};
       glm::vec3 normal{-assimp_mesh->mNormals[j].x, assimp_mesh->mNormals[j].z,
           assimp_mesh->mNormals[j].y};
+      glm::vec3 tangent{-assimp_mesh->mTangents[j].x, assimp_mesh->mTangents[j].z,
+          assimp_mesh->mTangents[j].y};
       glm::vec2 uv{assimp_mesh->mTextureCoords[0][j].x, assimp_mesh->mTextureCoords[0][j].y};
 
-      gfx::Vertex vertex{position, normal, uv};
+      gfx::Vertex vertex{position, normal, tangent, uv};
       vertices->push_back(vertex);
     }
 

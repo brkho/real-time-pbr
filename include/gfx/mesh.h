@@ -24,6 +24,8 @@ struct Vertex {
   glm::vec3 position;
   // Normal of the vertex.
   glm::vec3 normal;
+  // Tangent of the vertex.
+  glm::vec3 tangent;
   // UV coordinate of the vertex.
   glm::vec2 uv;
 };

@@ -33,9 +33,9 @@ uniform sampler2D diffuse_texture;
 uniform sampler2D specular_texture;
 uniform sampler2D normal_map;
 
-in vec3 Normal;
 in vec2 UV;
 in vec3 WorldPosition;
+in mat3 TBN;
 
 out vec4 out_color;
 
@@ -80,9 +80,9 @@ void main() {
   vec4 diffuse_color = diffuse_enabled ? texture(diffuse_texture, UV) : vec4(0.0, 0.0, 0.0, 1.0);
   vec3 specular_color = specular_enabled ? vec3(texture(specular_texture, UV)) :
       vec3(1.0, 1.0, 1.0);
-  vec3 tangent_space_normal = normal_enabled ? vec3(texture(normal_map, UV)) : vec3(0.0, 0.0, 0.5);
+  vec3 tangent_space_normal = normal_enabled ? vec3(texture(normal_map, UV)) : vec3(0.5, 0.5, 1.0);
   tangent_space_normal = normalize((tangent_space_normal * 2.0) - 1.0);
-  vec3 normal = tangent_space_normal;
+  vec3 normal = normalize(TBN * tangent_space_normal);
   vec4 total_color = ambient_coefficient * diffuse_color;
 
   if (directional_light.enabled) {
