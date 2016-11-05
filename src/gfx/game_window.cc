@@ -9,23 +9,66 @@
 #include <sstream>
 #include <string>
 
-gfx::GameWindow::GameWindow(int width, int height, std::string vertex_path,
-    std::string fragment_path, gfx::Camera* camera, float fov, gfx::Color color) : camera{camera},
-    window{nullptr}, field_of_view{fov}, program{0}, directional_light{nullptr} {
+gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
+    std::string main_fragment_path, std::string hdr_vertex_path, std::string hdr_fragment_path,
+    gfx::Camera* camera, float fov, gfx::Color color) : camera{camera}, window{nullptr},
+    field_of_view{fov}, program{0}, hdr_program{0}, hdr_fbo{0}, hdr_color_buffer{0},
+    draw_quad{nullptr}, quad_vertices{nullptr}, quad_elements{nullptr}, directional_light{nullptr} {
   for (unsigned int i = 0; i < gfx::MAX_POINT_LIGHTS; i++) {
     point_lights[i] = nullptr;
   }
   gfx::GameWindow::InitializeGameWindow(width, height, color);
-  program = gfx::GameWindow::LinkProgram(vertex_path, fragment_path);
-  if (program == 0) {
+  program = gfx::GameWindow::LinkProgram(main_vertex_path, main_fragment_path);
+  hdr_program = gfx::GameWindow::LinkProgram(hdr_vertex_path, hdr_fragment_path);
+  if (program == 0 || hdr_program == 0) {
     throw gfx::GameWindowCannotBeInitializedException();
   }
+
+  GLint dimensions[4];
+  glGetIntegerv(GL_VIEWPORT, dimensions);
+  int vp_width = dimensions[2];
+  int vp_height = dimensions[3];
+
+  // Generate the intermediate framebuffer.
+  glUseProgram(program);
+  glGenFramebuffers(1, &hdr_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
+
+  // Output to a texture with a depth renderbuffer.
+  glGenTextures(1, &hdr_color_buffer);
+  glBindTexture(GL_TEXTURE_2D, hdr_color_buffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, vp_width, vp_height, 0, GL_RGB, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_color_buffer, 0);
+  GLuint depth_rbo;
+  glGenRenderbuffers(1, &depth_rbo);
+  glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, vp_width, vp_height);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rbo);
+
+  // Set up quad used for rendering the output texture.
+  glUseProgram(hdr_program);
+  quad_vertices = new std::vector<gfx::Vertex>();
+  quad_vertices->push_back(gfx::GameWindow::PositionToQuadVertex(glm::vec3(-1.0f, -1.0f, 0.0f)));
+  quad_vertices->push_back(gfx::GameWindow::PositionToQuadVertex(glm::vec3(-1.0f, 1.0f, 0.0f)));
+  quad_vertices->push_back(gfx::GameWindow::PositionToQuadVertex(glm::vec3(1.0f, -1.0f, 0.0f)));
+  quad_vertices->push_back(gfx::GameWindow::PositionToQuadVertex(glm::vec3(1.0f, 1.9f, 0.0f)));
+  quad_elements = new std::vector<GLuint>{0, 1, 3, 3, 2, 0};
+  draw_quad = new gfx::Mesh(quad_vertices, quad_elements, nullptr, true);
   glUseProgram(program);
 }
 
-gfx::GameWindow::GameWindow(int width, int height, std::string vertex_path,
-    std::string fragment_path, gfx::Camera* camera) : GameWindow(width, height, vertex_path,
-    fragment_path, camera, 45.0f, gfx::Color(0.0f, 0.0f, 0.0f)) {}
+gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
+    std::string main_fragment_path, std::string hdr_vertex_path, std::string hdr_fragment_path,
+    gfx::Camera* camera) : GameWindow(width, height, main_vertex_path, main_fragment_path,
+    hdr_vertex_path, hdr_fragment_path, camera, 45.0f, gfx::Color(0.0f, 0.0f, 0.0f)) {}
+
+gfx::Vertex gfx::GameWindow::PositionToQuadVertex(glm::vec3 position) {
+  return gfx::Vertex{position, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 0.0f, 0.0f},
+      glm::vec2{0.0f, 0.0f}};
+}
 
 bool gfx::GameWindow::IsRunning() {
   return !glfwWindowShouldClose(window);
@@ -219,8 +262,9 @@ double gfx::GameWindow::GetElapsedTime() {
 }
 
 void gfx::GameWindow::PrepareRender() {
+  glUseProgram(program);
+  glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  // glEnable(GL_FRAMEBUFFER_SRGB);
   GLint view_location = glGetUniformLocation(program, "view_transform");
   glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(camera->GetViewTransform()));
   GLint projection_location = glGetUniformLocation(program, "projection_transform");
@@ -234,6 +278,18 @@ void gfx::GameWindow::RenderModel(gfx::ModelInstance* model_instance) {
 }
 
 void gfx::GameWindow::FinishRender() {
+  glUseProgram(hdr_program);
+  // Bind the default frame buffer, so we can actually render to the screen.
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, hdr_color_buffer);
+
+  // Render a quad that covers the entire screen so we can actually use the texture produced by the
+  // main shader.
+  glBindVertexArray(draw_quad->vao);
+  glDrawElements(GL_TRIANGLES, draw_quad->GetNumberOfIndices(), GL_UNSIGNED_INT, 0);
+  glBindVertexArray(0);
   glfwSwapBuffers(window);
 }
 

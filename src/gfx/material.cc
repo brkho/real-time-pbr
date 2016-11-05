@@ -9,7 +9,7 @@ gfx::Material::Material(GLuint diffuse_handle, GLuint specular_handle, GLuint no
 
 gfx::Material::Material(GLuint diffuse_handle, GLuint specular_handle, GLuint normal_handle,
     GLfloat shininess) : Material(diffuse_handle, specular_handle, normal_handle, shininess,
-    0.03f) {}
+    0.001f) {}
 
 gfx::Material::~Material() {
   return;

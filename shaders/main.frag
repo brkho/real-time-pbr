@@ -3,7 +3,6 @@
 #define PI 3.1415926535897932384626433832795
 // Make sure this matches the MAX_POINT_LIGHTS in gfx/constants.h!
 #define MAX_POINT_LIGHTS 3
-#define GAMMA 2.2
 
 struct DirectionalLight {
   bool enabled;
@@ -77,7 +76,7 @@ vec4 get_point_light_contribution(int light_index, vec4 diffuse_color, vec3 spec
 }
 
 void main() {
-  vec4 diffuse_color = diffuse_enabled ? texture(diffuse_texture, UV) : vec4(0.0, 0.0, 0.0, 1.0);
+  vec4 diffuse_color = diffuse_enabled ? texture(diffuse_texture, UV) : vec4(1.0, 1.0, 1.0, 1.0);
   vec3 specular_color = specular_enabled ? vec3(texture(specular_texture, UV)) :
       vec3(1.0, 1.0, 1.0);
   vec3 tangent_space_normal = normal_enabled ? vec3(texture(normal_map, UV)) : vec3(0.5, 0.5, 1.0);
@@ -98,6 +97,5 @@ void main() {
     total_color += get_point_light_contribution(2, diffuse_color, specular_color, normal);
   }
 
-  total_color = pow(total_color, vec4(1.0 / GAMMA));
-  out_color = clamp(total_color, 0.0, 1.0);
+  out_color = total_color;
 }

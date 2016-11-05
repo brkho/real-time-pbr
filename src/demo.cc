@@ -20,8 +20,10 @@ const int kWindowHeight = 800;
 const double kRotateSensitivity = 0.005;
 const double kPanSensitivity = 0.005;
 const double kZoomSensitivity = 0.01;
-const std::string kVertexShaderPath = "shaders/main.vert";
-const std::string kFragmentShaderPath = "shaders/main.frag";
+const std::string kMainVertexShaderPath = "shaders/main.vert";
+const std::string kMainFragmentShaderPath = "shaders/main.frag";
+const std::string kHdrVertexShaderPath = "shaders/hdr.vert";
+const std::string kHdrFragmentShaderPath = "shaders/hdr.frag";
 
 struct Position {
   double x;
@@ -107,14 +109,15 @@ void handle_input(GLFWwindow* window) {
 int main(int /* argc */, char* /* argv */[]) {
   camera = gfx::Camera();
   initialize_camera();
-  gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kVertexShaderPath, kFragmentShaderPath,
-      &camera, 45.0f, gfx::Color(0.15f, 0.15f, 0.15f));
+  gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kMainVertexShaderPath,
+      kMainFragmentShaderPath, kHdrVertexShaderPath, kHdrFragmentShaderPath, &camera, 45.0f,
+      gfx::Color(0.15f, 0.15f, 0.15f));
   // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
-  //     glm::vec3(1.0f, 1.0f, 1.0f));
+      // glm::vec3(1.0f, 1.0f, 1.0f));
   // game_window.SetDirectionalLight(&directional_light);
 
-  gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.003f,
-      0.0004f, glm::vec3(1.0f, 1.0f, 1.0f));
+  gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.3f,
+      0.04f, glm::vec3(10.0f, 2.0f, 2.0f));
   game_window.AddPointLight(&first_point_light);
 
   // gfx::PointLight second_point_light = gfx::PointLight(glm::vec3(2.0f, 2.0f, 0.0f), 1.0f, 0.14f,
@@ -123,18 +126,18 @@ int main(int /* argc */, char* /* argv */[]) {
 
   gfx::TextureManager texture_manager;
 
-  gfx::ModelInfo prism_info = gfx::ModelInfo("assets/stone_floor.fbx", &texture_manager, true);
+  gfx::ModelInfo prism_info = gfx::ModelInfo("assets/tunnel.fbx", &texture_manager, true);
   gfx::ModelInstance prism_instance = gfx::ModelInstance(&prism_info,
-      glm::vec3(0.0f, 0.0f, 0.0f));
-  prism_instance.scale = glm::vec3(20.0f, 20.0f, 1.0f);
+      glm::vec3(0.0f, -15.0f, 0.0f));
+  prism_instance.scale = glm::vec3(1.0f, 5.0f, 1.0f);
   // prism_instance.rotation = glm::quat(0.70711f, 0.0f, 0.70711f, 0.0f);
   prism_instance.Update();
 
-  gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);
-  gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
-      glm::vec3(0.0f, 0.0f, 0.0f));
-  box_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-  box_instance.Update();
+  // gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);
+  // gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
+  //     glm::vec3(0.0f, 0.0f, 0.0f));
+  // box_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+  // box_instance.Update();
 
   std::fill_n(keys, 1024, 0);
   glfwSetKeyCallback(game_window.window, key_callback);
@@ -156,20 +159,20 @@ int main(int /* argc */, char* /* argv */[]) {
     last_time = current_time;
 
     // Move the light in a circle.
-    float x_pos = -sin(current_time) * 10.0;
-    float y_pos = -cos(current_time) * 10.0;
-    box_instance.position = glm::vec3(x_pos, y_pos, 1.0f);
-    box_instance.Update();
+    // float x_pos = -sin(current_time) * 10.0;
+    // float y_pos = -cos(current_time) * 10.0;
+    // box_instance.position = glm::vec3(x_pos, y_pos, 1.0f);
+    // box_instance.Update();
 
-    first_point_light.position = glm::vec3(x_pos, y_pos, 1.0f);
-    game_window.UpdatePointLight(&first_point_light);
+    // first_point_light.position = glm::vec3(x_pos, y_pos, 1.0f);
+    // game_window.UpdatePointLight(&first_point_light);
 
     game_window.PollForEvents();
     handle_input(game_window.window);
     update_camera();
 
     game_window.PrepareRender();
-    game_window.RenderModel(&box_instance);
+    // game_window.RenderModel(&box_instance);
     game_window.RenderModel(&prism_instance);
     game_window.FinishRender();
   }

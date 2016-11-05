@@ -1,5 +1,5 @@
 // This class defines a game window backed by GLFW that abstracts away much of the OpenGL
-// operations. In addition, it will also manage the camera, shaders, and program. The GameWindow
+// operations. In addition, it will also manage the camera, shaders, and program(s). The GameWindow
 // will hold references to the Camera and Lights and will require an input of ModelInstances to
 // draw. The full feature set of the GLFW can be accessed via the window property.
 //
@@ -12,6 +12,7 @@
 #include "gfx/color.h"
 #include "gfx/constants.h"
 #include "gfx/directional_light.h"
+#include "gfx/mesh.h"
 #include "gfx/model_instance.h"
 #include "gfx/point_light.h"
 
@@ -34,14 +35,15 @@ class GameWindow {
 
     // Constructor with a width, height, path to the vertex shader, path to the fragment shader,
     // referenceto the camera, field of view, and the buffer clear color.
-    GameWindow(int width, int height, std::string vertex_path, std::string fragment_path,
-        gfx::Camera* camera, float fov, gfx::Color color);
+    GameWindow(int width, int height, std::string main_vertex_path, std::string main_fragment_path,
+        std::string hdr_vertex_path, std::string hdr_fragment_path, gfx::Camera* camera, float fov,
+        gfx::Color color);
 
     // Constructor with a width, height, path to the vertex shader, path to the fragment shader,
     // referenceto the camera, field of view, and the buffer clear color. This defaults the FOV to
     // 45 degrees and the buffer clear color to black.
-    GameWindow(int width, int height, std::string vertex_path, std::string fragment_path,
-        gfx::Camera* camera);
+    GameWindow(int width, int height, std::string main_vertex_path, std::string main_fragment_path,
+        std::string hdr_vertex_path, std::string hdr_fragment_path, gfx::Camera* camera);
 
     // TODO: Actually clean up after ourselves with the Rule of Three.
 
@@ -93,16 +95,38 @@ class GameWindow {
     // a FinishRender.
     void RenderModel(gfx::ModelInstance* model_instance);
 
-    // Complets the rendering started by PrepareRender. This swaps the buffer so the rendered image
-    // can actually be seen.
+    // Compeletes the rendering started by PrepareRender. This takes the accumulated render on the
+    // HDR buffer and tone maps it onto the display buffer. It then swaps the buffer so the
+    // rendered image can actually be seen.
     void FinishRender();
 
   private:
     // The field of view for the window.
     GLfloat field_of_view;
 
-    // The shader program used by the GameWindow.
+    // The main shader program used by the GameWindow. This outputs to a HDR framebuffer which is
+    // in turn rendered with the hdr_program.
     GLuint program;
+
+    // The HDR shader program that takes the output of the main shader program and tone maps it
+    // into LDR space for the final render.
+    GLuint hdr_program;
+
+    // The Framebuffer Object (with greater floating point precision) that is written to by the
+    // main shader and then subsequently used for rendering by the HDR program.
+    GLuint hdr_fbo;
+
+    // The color buffer that s the render target of the main shader.
+    GLuint hdr_color_buffer;
+
+    // The quad used by the HDR shader for drawing the HDR texture output by the main shader.
+    gfx::Mesh* draw_quad;
+
+    // The vertices that make up the draw_quad.
+    std::vector<gfx::Vertex>* quad_vertices;
+
+    // The elements that make up the draw_quad.
+    std::vector<GLuint>* quad_elements;
 
     // The matrix used for the perspective projection.
     glm::mat4 perspective_projection;
@@ -132,6 +156,10 @@ class GameWindow {
     // Helper function to find the index of a point light using the reverse map. This throws if the
     // point light is not yet added.
     unsigned int GetAndValidatePointLightIndex(gfx::PointLight* point_light);
+
+    // Helper function to turn a vec3 position into a Vertex to be consumed by the Mesh class with
+    // non-important values for normal, tangent, and UV.
+    gfx::Vertex PositionToQuadVertex(glm::vec3 position);
 };
 
 }
