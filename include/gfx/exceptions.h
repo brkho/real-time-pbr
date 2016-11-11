@@ -8,7 +8,7 @@
 namespace gfx {
 
 // When the VAO, VBO, or EBO buffers are already mapped when we expect them to be unmapped.
-class BuffersAlreadyMappedException : std::exception {
+class BuffersAlreadyMappedException : public std::exception {
   public:
     const char * what () const throw () {
       return "Buffers are already mapped.";
@@ -16,7 +16,7 @@ class BuffersAlreadyMappedException : std::exception {
 };
 
 // When the VAO, VBO, or EBO buffers are not yet mapped when we expect them to be mapped.
-class BuffersNotYetMappedException : std::exception {
+class BuffersNotYetMappedException : public std::exception {
   public:
     const char * what () const throw () {
       return "Buffers are not yet mapped.";
@@ -24,7 +24,7 @@ class BuffersNotYetMappedException : std::exception {
 };
 
 // When Assimp cannot read a file.
-class AssimpInvalidFileException : std::exception {
+class AssimpInvalidFileException : public std::exception {
   public:
     const char * what () const throw () {
       return "Assimp cannot read the file.";
@@ -32,7 +32,7 @@ class AssimpInvalidFileException : std::exception {
 };
 
 // When the game window cannot be initialized.
-class GameWindowCannotBeInitializedException : std::exception {
+class GameWindowCannotBeInitializedException : public std::exception {
   public:
     const char * what () const throw () {
       return "Game window cannot be initialized.";
@@ -40,7 +40,7 @@ class GameWindowCannotBeInitializedException : std::exception {
 };
 
 // When the texture manager cannot read the image.
-class CannotLoadTextureException : std::exception {
+class CannotLoadTextureException : public std::exception {
   public:
     const char * what () const throw () {
       return "Texture cannot be loaded.";
@@ -48,7 +48,7 @@ class CannotLoadTextureException : std::exception {
 };
 
 // When there are too many lights in the scene (over gfx::MAX_POINT_LIGHTS).
-class TooManyLightsException : std::exception {
+class TooManyLightsException : public std::exception {
   public:
     const char * what () const throw () {
       return "Too many lights in the scene.";
@@ -56,7 +56,7 @@ class TooManyLightsException : std::exception {
 };
 
 // When there is an invalid access of the lights array.
-class InvalidLightException : std::exception {
+class InvalidLightException : public std::exception {
   public:
     const char * what () const throw () {
       return "Invalid access of light array.";
