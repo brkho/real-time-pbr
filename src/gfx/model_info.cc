@@ -11,6 +11,9 @@ gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, 
     meshes{std::vector<gfx::Mesh>()} {
 
   std::ifstream input_file {model_path};
+  if (!input_file) {
+    throw gfx::CannotOpenEOFileException();
+  }
 
   // Read the shader type.
   char shader_type_value;

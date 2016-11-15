@@ -6,11 +6,6 @@ option(GLFW_BUILD_EXAMPLES OFF)
 option(GLFW_BUILD_TESTS OFF)
 add_subdirectory(lib/glfw)
 
-option(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-option(ASSIMP_BUILD_SAMPLES OFF)
-option(ASSIMP_BUILD_TESTS OFF)
-add_subdirectory(lib/assimp)
-
 option(BUILD_CPU_DEMOS OFF)
 option(BUILD_EXTRAS OFF)
 option(BUILD_OPENGL3_DEMOS OFF)
@@ -26,7 +21,6 @@ else()
 endif()
 
 include_directories(include/
-                    lib/assimp/include/
                     lib/glad/include/
                     lib/glfw/include/
                     lib/glm/
@@ -77,7 +71,7 @@ add_custom_target(run
     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME} assimp glfw
+target_link_libraries(${PROJECT_NAME} glfw
                       ${GLFW_LIBRARIES} ${GLAD_LIBRARIES})
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY /${CMAKE_BINARY_DIR}/bin/)

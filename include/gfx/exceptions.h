@@ -23,14 +23,6 @@ class BuffersNotYetMappedException : public std::exception {
     }
 };
 
-// When Assimp cannot read a file.
-class AssimpInvalidFileException : public std::exception {
-  public:
-    const char * what () const throw () {
-      return "Assimp cannot read the file.";
-    }
-};
-
 // When the game window cannot be initialized.
 class GameWindowCannotBeInitializedException : public std::exception {
   public:
@@ -60,6 +52,14 @@ class InvalidLightException : public std::exception {
   public:
     const char * what () const throw () {
       return "Invalid access of light array.";
+    }
+};
+
+// When the EO importer cannot open a file.
+class CannotOpenEOFileException : public std::exception {
+  public:
+    const char * what () const throw () {
+      return "Cannot open .eo file.";
     }
 };
 

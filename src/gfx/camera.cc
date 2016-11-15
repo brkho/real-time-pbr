@@ -4,7 +4,7 @@
 #include <glm/ext.hpp>
 
 gfx::Camera::Camera() : camera_position{glm::vec3{0.0f, 0.0f, 3.0f}},
-    camera_target{glm::vec3{0.0f, 0.0f, 0.0f}}, camera_up{glm::vec3{0.0f, 0.0f, 1.0f}} {
+    camera_target{glm::vec3{0.0f, 0.0f, 0.0f}}, camera_up{glm::vec3{0.0f, 1.0f, 0.0f}} {
   gfx::Camera::UpdateViewTransform();
 }
 

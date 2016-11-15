@@ -81,11 +81,12 @@ vec4 get_point_light_contribution(int light_index, vec4 albedo_color, vec3 specu
 }
 
 void main() {
-  vec4 albedo_color = !albedo_enabled ? texture(albedo_map, UV) : vec4(1.0, 1.0, 1.0, 1.0);
-  vec3 specular_color = !specular_enabled ? vec3(texture(specular_map, UV)) :
+  vec4 albedo_color = albedo_enabled ? texture(albedo_map, UV) : vec4(1.0, 1.0, 1.0, 1.0);
+  vec3 specular_color = specular_enabled ? vec3(texture(specular_map, UV)) :
       vec3(1.0, 1.0, 1.0);
   vec3 tangent_space_normal = normal_enabled ? vec3(texture(normal_map, UV)) : vec3(0.5, 0.5, 1.0);
-  tangent_space_normal = normalize((tangent_space_normal * 2.0) - 1.0);
+  tangent_space_normal = normalize((tangent_space_normal * 2.0) - 1.0) * vec3(1.0, -1.0, 1.0);
+  tangent_space_normal = vec3(tangent_space_normal.x, tangent_space_normal.y, tangent_space_normal.z);
   vec3 normal = normalize(TBN * tangent_space_normal);
   vec4 total_color = ambient_coefficient * albedo_color;
 

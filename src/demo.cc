@@ -44,12 +44,12 @@ void update_camera() {
   // Convert from spherical coordinates to Cartesian coordinates.
   camera.camera_position = glm::vec3(
       distance * sin(current_pitch) * cos(current_yaw),
-      distance * sin(current_pitch) * sin(current_yaw),
-      distance * cos(current_pitch));
+      distance * cos(current_pitch),
+      distance * sin(current_pitch) * sin(current_yaw));
   camera.camera_position += pan_offset;
   float up_direction = sin(current_pitch) > 0 ? 1.0 : -1.0;
   camera.camera_target = pan_offset;
-  camera.camera_up = glm::vec3(0.0f, 0.0f, up_direction);
+  camera.camera_up = glm::vec3(0.0f, up_direction, 0.0f);
 }
 
 void initialize_camera() {
@@ -95,7 +95,7 @@ void handle_input(GLFWwindow* window) {
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     if (keys[GLFW_KEY_LEFT_ALT]) {
-      current_yaw += (previous_pos.x - x) * kRotateSensitivity;
+      current_yaw -= (previous_pos.x - x) * kRotateSensitivity;
       current_pitch += (previous_pos.y - y) * kRotateSensitivity;
     } else if (keys[GLFW_KEY_LEFT_CONTROL]) {
       pan_offset += camera.GetRightVector() * (previous_pos.x - x) * kPanSensitivity;
@@ -119,9 +119,9 @@ int main(int /* argc */, char* /* argv */[]) {
         glm::vec3(1.0f, 1.0f, 1.0f));
     game_window.SetDirectionalLight(&directional_light);
 
-    // gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.3f,
-    //     0.04f, glm::vec3(10.0f, 2.0f, 2.0f));
-    // game_window.AddPointLight(&first_point_light);
+    gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(5.0f, 5.0f, 5.0f), 1.0f, 0.3f,
+        0.04f, glm::vec3(3.0f, 3.0f, 3.0f));
+    game_window.AddPointLight(&first_point_light);
 
     // gfx::PointLight second_point_light = gfx::PointLight(glm::vec3(2.0f, 2.0f, 0.0f), 1.0f, 0.14f,
     //     0.07f, glm::vec3(2.5f, 2.5f, 2.5f));
@@ -129,10 +129,9 @@ int main(int /* argc */, char* /* argv */[]) {
 
     gfx::TextureManager texture_manager;
 
-    // TEST INFO
-    gfx::ModelInfo test_info = gfx::ModelInfo("assets/sculpture/sculpture.eo",
+    gfx::ModelInfo sculpture_info = gfx::ModelInfo("assets/sculpture/sculpture.eo",
         &texture_manager, true);
-    gfx::ModelInstance test_instance = gfx::ModelInstance(&test_info,
+    gfx::ModelInstance sculpture_instance = gfx::ModelInstance(&sculpture_info,
         glm::vec3(0.0f, 0.0f, 0.0f));
 
     // gfx::ModelInfo prism_info = gfx::ModelInfo("assets/tunnel.fbx", &texture_manager, true);
@@ -142,11 +141,11 @@ int main(int /* argc */, char* /* argv */[]) {
     // // prism_instance.rotation = glm::quat(0.70711f, 0.0f, 0.70711f, 0.0f);
     // prism_instance.Update();
 
-    // gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);
-    // gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
-    //     glm::vec3(0.0f, 0.0f, 0.0f));
-    // box_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-    // box_instance.Update();
+    gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box.eo", &texture_manager, true);
+    gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
+        glm::vec3(3.0f, 3.0f, 3.0f));
+    box_instance.scale = glm::vec3(0.3f, 0.3f, 0.3f);
+    box_instance.Update();
 
     std::fill_n(keys, 1024, 0);
     glfwSetKeyCallback(game_window.window, key_callback);
@@ -181,9 +180,9 @@ int main(int /* argc */, char* /* argv */[]) {
       update_camera();
 
       game_window.PrepareRender();
-      // game_window.RenderModel(&box_instance);
+      game_window.RenderModel(&box_instance);
       // game_window.RenderModel(&prism_instance);
-      game_window.RenderModel(&test_instance);
+      game_window.RenderModel(&sculpture_instance);
       game_window.FinishRender();
     }
 
