@@ -63,5 +63,21 @@ class InvalidLightException : public std::exception {
     }
 };
 
+// When the EO importer encounters an invalid shader type (not defined in the gfx::ShaderType enum).
+class InvalidShaderTypeException : public std::exception {
+  public:
+    const char * what () const throw () {
+      return "Invalid shader type.";
+    }
+};
+
+// When the EO importer tries to read in an invalid file.
+class InvalidEOFileFormatException : public std::exception {
+  public:
+    const char * what () const throw () {
+      return "Invalid .eo file format.";
+    }
+};
+
 }
 #endif // GFX_EXCEPTIONS_H

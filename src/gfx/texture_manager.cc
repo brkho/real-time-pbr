@@ -19,9 +19,10 @@ GLuint gfx::TextureManager::GetTextureHandle(std::string path, bool convert_to_l
   // Load the image.
   int width, height, bits_per_pixel;
   unsigned char* image_data = stbi_load(path.c_str(), &width, &height, &bits_per_pixel, 0);
-  if (image_data == nullptr) {
+  if (image_data == nullptr || (bits_per_pixel != 3 && bits_per_pixel != 4)) {
     throw gfx::CannotLoadTextureException();
   }
+  GLenum image_format = bits_per_pixel == 4 ? GL_RGBA : GL_RGB;
 
   // Transfer the texture to OpenGL.
   GLuint texture;
@@ -34,8 +35,9 @@ GLuint gfx::TextureManager::GetTextureHandle(std::string path, bool convert_to_l
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-  GLenum format = convert_to_linear ? GL_SRGB : GL_RGB;
-  glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+  GLenum engine_format = convert_to_linear ? GL_SRGB : GL_RGB;
+  glTexImage2D(GL_TEXTURE_2D, 0, engine_format, width, height, 0, image_format, GL_UNSIGNED_BYTE,
+      image_data);
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(image_data);
   glBindTexture(GL_TEXTURE_2D, 0);

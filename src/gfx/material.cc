@@ -2,31 +2,29 @@
 
 #include <iostream>
 
-gfx::Material::Material(GLuint diffuse_handle, GLuint specular_handle, GLuint normal_handle,
-    GLfloat shininess, GLfloat ambient) : shininess{shininess}, ambient_coefficient{ambient},
-    diffuse_handle{diffuse_handle}, specular_handle{specular_handle},
+gfx::Material::Material(gfx::ShaderType shader_type, GLuint albedo_handle, GLuint specular_handle,
+    GLuint gloss_handle, GLuint ior_handle, GLuint normal_handle, GLfloat ambient) :
+    ambient_coefficient{ambient}, shader_type{shader_type}, albedo_handle{albedo_handle},
+    specular_handle{specular_handle}, gloss_handle{gloss_handle}, ior_handle{ior_handle},
     normal_handle{normal_handle} {}
-
-gfx::Material::Material(GLuint diffuse_handle, GLuint specular_handle, GLuint normal_handle,
-    GLfloat shininess) : Material(diffuse_handle, specular_handle, normal_handle, shininess,
-    0.001f) {}
 
 gfx::Material::~Material() {
   return;
 }
 
 void gfx::Material::UseMaterial(GLuint program) {
+  GLint shader_type_location = glGetUniformLocation(program, "shader_type");
+  glUniform1f(shader_type_location, shader_type);
+
   GLint ambient_location = glGetUniformLocation(program, "ambient_coefficient");
   glUniform1f(ambient_location, ambient_coefficient);
-  GLint shininess_location = glGetUniformLocation(program, "shininess");
-  glUniform1f(shininess_location, shininess);
 
-  GLint diffuse_enabled_location = glGetUniformLocation(program, "diffuse_enabled");
-  glUniform1i(diffuse_enabled_location, diffuse_handle != 0);
-  if (diffuse_handle != 0) {
+  GLint albedo_enabled_location = glGetUniformLocation(program, "albedo_enabled");
+  glUniform1i(albedo_enabled_location, albedo_handle != 0);
+  if (albedo_handle != 0) {
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, diffuse_handle);
-    glUniform1i(glGetUniformLocation(program, "diffuse_texture"), 0);
+    glBindTexture(GL_TEXTURE_2D, albedo_handle);
+    glUniform1i(glGetUniformLocation(program, "albedo_map"), 0);
   }
 
   GLint specular_enabled_location = glGetUniformLocation(program, "specular_enabled");
@@ -34,21 +32,37 @@ void gfx::Material::UseMaterial(GLuint program) {
   if (specular_handle != 0) {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, specular_handle);
-    glUniform1i(glGetUniformLocation(program, "specular_texture"), 1);
+    glUniform1i(glGetUniformLocation(program, "specular_map"), 1);
+  }
+
+  GLint gloss_enabled_location = glGetUniformLocation(program, "gloss_enabled");
+  glUniform1i(gloss_enabled_location, gloss_handle != 0);
+  if (gloss_handle != 0) {
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gloss_handle);
+    glUniform1i(glGetUniformLocation(program, "gloss_map"), 2);
+  }
+
+  GLint ior_enabled_location = glGetUniformLocation(program, "ior_enabled");
+  glUniform1i(ior_enabled_location, ior_handle != 0);
+  if (ior_handle != 0) {
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, ior_handle);
+    glUniform1i(glGetUniformLocation(program, "ior_map"), 3);
   }
 
   GLint normal_enabled_location = glGetUniformLocation(program, "normal_enabled");
   glUniform1i(normal_enabled_location, normal_handle != 0);
   if (normal_handle != 0) {
-    glActiveTexture(GL_TEXTURE2);
+    glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, normal_handle);
-    glUniform1i(glGetUniformLocation(program, "normal_map"), 2);
+    glUniform1i(glGetUniformLocation(program, "normal_map"), 4);
   }
 }
 
 void gfx::Material::RemoveTexture(GLuint id) {
-  if (diffuse_handle == id) {
-    diffuse_handle = 0;
+  if (albedo_handle == id) {
+    albedo_handle = 0;
   }
   if (specular_handle == id) {
     specular_handle = 0;

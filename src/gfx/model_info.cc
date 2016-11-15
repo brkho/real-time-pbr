@@ -3,65 +3,57 @@
 
 #include <glm/glm.hpp>
 
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-
 #include <cmath>
 #include <iostream>
 #include <memory>
 
 gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, bool should_map) :
     meshes{std::vector<gfx::Mesh>()} {
-  Assimp::Importer importer;
-  const aiScene* scene = importer.ReadFile(model_path, aiProcess_Triangulate | aiProcess_FlipUVs |
-      aiProcess_GenNormals | aiProcess_CalcTangentSpace);
-  if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-    std::cout << "Assimp error: " << importer.GetErrorString() << std::endl;
-    throw gfx::AssimpInvalidFileException();
+
+  std::ifstream input_file {model_path};
+
+  // Read the shader type.
+  char shader_type_value;
+  input_file.read(&shader_type_value, 1);
+  if ((size_t)shader_type_value >= gfx::shader_map.size()) {
+    throw gfx::InvalidShaderTypeException();
+  }
+  gfx::ShaderType shader_type = gfx::shader_map[(size_t)shader_type_value];
+
+  // Get the material info.
+  GLuint albedo_handle = LoadMap(&input_file, manager, true);
+  GLuint specular_handle = LoadMap(&input_file, manager, false);
+  GLuint gloss_handle = LoadMap(&input_file, manager, false);
+  GLuint ior_handle = LoadMap(&input_file, manager, false);
+  GLuint normal_handle = LoadMap(&input_file, manager, false);
+  std::shared_ptr<gfx::Material> material(new gfx::Material(shader_type, albedo_handle,
+      specular_handle, gloss_handle, ior_handle, normal_handle, 0.01));
+
+  // Copy the vertices directly into memory.
+  size_t num_vertices;
+  input_file.read((char*)(&num_vertices), sizeof(size_t));
+  std::vector<gfx::Vertex>* vertices = new std::vector<gfx::Vertex> {num_vertices};
+  input_file.read((char*)(vertices->data()), sizeof(gfx::Vertex) * num_vertices);
+
+  // Copy the indices directly into memory. We only need to do error checking on this last data
+  // block because if the file is too long, we will know after extracting. If the file is too short
+  // this will always fail even if we exhausted all data in an earlier read.
+  size_t num_indices;
+  input_file.read((char*)(&num_indices), sizeof(size_t));
+  // Have to use resize here instead of the constructor like I do in vertices because of implicit
+  // conversion from size_t to GLuint causing the compiler to think I'm actually just trying to
+  // allocate a vector of size 1.
+  std::vector<GLuint>* indices = new std::vector<GLuint>();
+  indices->resize(num_indices);
+  input_file.read((char*)(indices->data()), sizeof(GLuint) * num_indices);
+  // Error checking.
+  if ((size_t)input_file.gcount() != sizeof(GLuint) * num_indices || input_file.get() != EOF) {
+    throw gfx::InvalidEOFileFormatException();
   }
 
-  for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
-    const aiMesh* assimp_mesh = scene->mMeshes[i];
-    const aiMaterial* assimp_material = scene->mMaterials[assimp_mesh->mMaterialIndex];
-    float shininess = 35.0f;
-    assimp_material->Get(AI_MATKEY_SHININESS, shininess);
-    GLuint diffuse_handle = LoadTexture(assimp_material, aiTextureType_DIFFUSE, true, manager);
-    GLuint specular_handle = LoadTexture(assimp_material, aiTextureType_SPECULAR, true, manager);
-    GLuint normal_handle = LoadTexture(assimp_material, aiTextureType_NORMALS, false, manager);
-    std::shared_ptr<gfx::Material> material(new gfx::Material(
-        diffuse_handle, specular_handle, normal_handle, shininess));
-
-    std::vector<gfx::Vertex>* vertices = new std::vector<gfx::Vertex>();
-    for (unsigned int j = 0; j < assimp_mesh->mNumVertices; ++j) {
-      glm::vec3 position{-assimp_mesh->mVertices[j].x, assimp_mesh->mVertices[j].z,
-          assimp_mesh->mVertices[j].y};
-      glm::vec3 normal{-assimp_mesh->mNormals[j].x, assimp_mesh->mNormals[j].z,
-          assimp_mesh->mNormals[j].y};
-      glm::vec3 tangent{-assimp_mesh->mTangents[j].x, assimp_mesh->mTangents[j].z,
-          assimp_mesh->mTangents[j].y};
-      glm::vec2 uv{assimp_mesh->mTextureCoords[0][j].x, assimp_mesh->mTextureCoords[0][j].y};
-
-      gfx::Vertex vertex{position, normal, tangent, uv};
-      vertices->push_back(vertex);
-    }
-
-    std::vector<GLuint>* indices = new std::vector<GLuint>();
-    for (unsigned int j = 0; j < assimp_mesh->mNumFaces; ++j) {
-      aiFace assimp_face = assimp_mesh->mFaces[j];
-      for (unsigned int k = 0; k < assimp_face.mNumIndices; k++) {
-        indices->push_back(assimp_face.mIndices[k]);
-      }
-    }
-    meshes.push_back(gfx::Mesh(vertices, indices, material, should_map));
-  }
-}
-
-GLuint gfx::ModelInfo::LoadTexture(const aiMaterial* material, aiTextureType type,
-    bool convert_to_linear, gfx::TextureManager* manager) {
-  aiString path_struct;
-  material->GetTexture(type, 0, &path_struct, nullptr, nullptr, nullptr, nullptr, nullptr);
-  std::string path(path_struct.data);
-  return path.length() == 0 ? 0 : manager->GetTextureHandle(assets_path + path, convert_to_linear);
+  // TODO(brkho): One day support multiple meshes in one model.
+  meshes.push_back(gfx::Mesh(vertices, indices, material, should_map));
+  input_file.close();
 }
 
 gfx::ModelInfo::~ModelInfo() {
@@ -93,3 +85,17 @@ void gfx::ModelInfo::Remap() {
   gfx::ModelInfo::Unmap();
   gfx::ModelInfo::Map();
 }
+
+GLuint gfx::ModelInfo::LoadMap(std::ifstream* input_file, gfx::TextureManager* manager,
+    bool convert_to_linear) {
+  char num_chars;
+  input_file->read(&num_chars, 1);
+  if (num_chars == 0) {
+    return 0;
+  }
+
+  char path[256];
+  input_file->read(path, num_chars);
+  return manager->GetTextureHandle(std::string {path}, convert_to_linear);
+}
+

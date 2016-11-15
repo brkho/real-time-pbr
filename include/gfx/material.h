@@ -1,7 +1,6 @@
-// This class provides an abstraction for materials. A material stores a handle to the diffuse
-// texture and a handle to the specular texture (both managed by OpenGL). A material also has a
-// specular shininess value. A material can be used with UseMaterial which will bind its textures
-// to texture units and set the uniforms accordingly.
+// This class provides an abstraction for materials. A material stores handles to many material
+// maps managed by OpenGL. A material also has an ambient lighting value. A material can be used
+// with UseMaterial which will bind its textures to texture units and set the uniforms accordingly.
 
 // Brian Ho (brian@brkho.com)
 
@@ -14,27 +13,26 @@
 
 namespace gfx {
 
+enum ShaderType { BlinnPhong, CookTorrance, AshikhminShirley };
+
 class Material {
   public:
-    // The shininess of the material.
-    GLfloat shininess;
     // The ambient lighting coefficient.
     GLfloat ambient_coefficient;
 
-    // Constructs a material with an OpenGL handle to a diffuse texture, an OpenGL handle to a
-    // specular texture, an OpenGL handle to a normal map, the shininess as a float, and an ambient
-    // lighting coefficient. Use handles of 0 to use no texture.
-    Material(GLuint diffuse_handle, GLuint specular_handle, GLuint normal_handle,
-        GLfloat shininess, GLfloat ambient);
+    // Constructs a material with a shader type, an OpenGL handle to an albedo map, an OpenGL
+    // handle to a specular map, an OpenGL handle to a gloss map, an OpenGL handle to an IOR map,
+    // an OpenGL handle to a normal map, and an ambient lighting coefficient.. Use handles of 0 to
+    // use no map. If no map is specified (by using a handle of 0), these defaults are used:
+    // albedo: all white
+    // specular: no specular reflection (all black)
+    // gloss: TBD
+    // IOR: TBD
+    // normal: unmodified model normals (all (127, 127, 127))
+    Material(ShaderType shader_type, GLuint albedo_handle, GLuint specular_handle,
+        GLuint gloss_handle, GLuint ior_handle, GLuint normal_handle, GLfloat ambient);
 
-    // Constructs a material with an OpenGL handle to a diffuse texture, an OpenGL handle to a
-    // specular texture, an OpenGL handle to a normal map, and the shininess as a float. Use
-    // handles of 0 to use no texture. This initializes the ambient lighting coefficient to 0.03
-    // and the base color to white.
-    Material(GLuint diffuse_handle, GLuint specular_handle, GLuint normal_handle,
-        GLfloat shininess);
-
-    // Destroys the material by clearing the diffuse texture and the specular texture.
+    // Destroys the material by clearing the material maps.
     ~Material();
 
     // Uses the material for rendering the current model given a handle to the shader program.
@@ -44,10 +42,16 @@ class Material {
     void RemoveTexture(GLuint id);
 
   private:
-    // The OpenGL handle to the diffuse texture.
-    GLuint diffuse_handle;
-    // The OpenGL handle to the specular texture.
+    // The shader type used to render models with the material.
+    ShaderType shader_type;
+    // The OpenGL handle to the albedo map.
+    GLuint albedo_handle;
+    // The OpenGL handle to the specular map.
     GLuint specular_handle;
+    // The OpenGL handle to the specular map.
+    GLuint gloss_handle;
+    // The OpenGL handle to the specular map.
+    GLuint ior_handle;
     // The OpenGL handle to the normal map.
     GLuint normal_handle;
 };

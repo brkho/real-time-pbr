@@ -13,6 +13,7 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
+#include <exception>
 #include <iostream>
 
 const int kWindowWidth = 1280;
@@ -107,76 +108,89 @@ void handle_input(GLFWwindow* window) {
 
 // Main point of entry for the code.
 int main(int /* argc */, char* /* argv */[]) {
-  camera = gfx::Camera();
-  initialize_camera();
-  gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kMainVertexShaderPath,
-      kMainFragmentShaderPath, kHdrVertexShaderPath, kHdrFragmentShaderPath, &camera, 45.0f,
-      gfx::Color(0.15f, 0.15f, 0.15f));
-  // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
-      // glm::vec3(1.0f, 1.0f, 1.0f));
-  // game_window.SetDirectionalLight(&directional_light);
+  // TODO(brkho): Remove this big try-catch and do actual error handling on a per-line basis.
+  try {
+    camera = gfx::Camera();
+    initialize_camera();
+    gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kMainVertexShaderPath,
+        kMainFragmentShaderPath, kHdrVertexShaderPath, kHdrFragmentShaderPath, &camera, 45.0f,
+        gfx::Color(0.15f, 0.15f, 0.15f));
+    gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f));
+    game_window.SetDirectionalLight(&directional_light);
 
-  gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.3f,
-      0.04f, glm::vec3(10.0f, 2.0f, 2.0f));
-  game_window.AddPointLight(&first_point_light);
+    // gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 0.3f,
+    //     0.04f, glm::vec3(10.0f, 2.0f, 2.0f));
+    // game_window.AddPointLight(&first_point_light);
 
-  // gfx::PointLight second_point_light = gfx::PointLight(glm::vec3(2.0f, 2.0f, 0.0f), 1.0f, 0.14f,
-  //     0.07f, glm::vec3(2.5f, 2.5f, 2.5f));
-  // game_window.AddPointLight(&second_point_light);
+    // gfx::PointLight second_point_light = gfx::PointLight(glm::vec3(2.0f, 2.0f, 0.0f), 1.0f, 0.14f,
+    //     0.07f, glm::vec3(2.5f, 2.5f, 2.5f));
+    // game_window.AddPointLight(&second_point_light);
 
-  gfx::TextureManager texture_manager;
+    gfx::TextureManager texture_manager;
 
-  gfx::ModelInfo prism_info = gfx::ModelInfo("assets/tunnel.fbx", &texture_manager, true);
-  gfx::ModelInstance prism_instance = gfx::ModelInstance(&prism_info,
-      glm::vec3(0.0f, -15.0f, 0.0f));
-  prism_instance.scale = glm::vec3(1.0f, 5.0f, 1.0f);
-  // prism_instance.rotation = glm::quat(0.70711f, 0.0f, 0.70711f, 0.0f);
-  prism_instance.Update();
+    // TEST INFO
+    gfx::ModelInfo test_info = gfx::ModelInfo("assets/sculpture/sculpture.eo",
+        &texture_manager, true);
+    gfx::ModelInstance test_instance = gfx::ModelInstance(&test_info,
+        glm::vec3(0.0f, 0.0f, 0.0f));
 
-  // gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);
-  // gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
-  //     glm::vec3(0.0f, 0.0f, 0.0f));
-  // box_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-  // box_instance.Update();
+    // gfx::ModelInfo prism_info = gfx::ModelInfo("assets/tunnel.fbx", &texture_manager, true);
+    // gfx::ModelInstance prism_instance = gfx::ModelInstance(&prism_info,
+    //     glm::vec3(0.0f, -15.0f, 0.0f));
+    // prism_instance.scale = glm::vec3(1.0f, 5.0f, 1.0f);
+    // // prism_instance.rotation = glm::quat(0.70711f, 0.0f, 0.70711f, 0.0f);
+    // prism_instance.Update();
 
-  std::fill_n(keys, 1024, 0);
-  glfwSetKeyCallback(game_window.window, key_callback);
-  glfwSetMouseButtonCallback(game_window.window, mouse_button_callback);
-  glfwSetScrollCallback(game_window.window, scroll_callback);
-
-  double fps_print_time = 2.5;
-  double last_time = game_window.GetElapsedTime();
-
-  // Main rendering loop.
-  while(game_window.IsRunning()) {
-    double current_time = game_window.GetElapsedTime();
-    double frame_time = current_time - last_time;
-    fps_print_time -= frame_time;
-    if (fps_print_time <= 0.0) {
-      std::cout << "FPS: " << 1.0 / frame_time << std::endl;
-      fps_print_time = 2.5;
-    }
-    last_time = current_time;
-
-    // Move the light in a circle.
-    // float x_pos = -sin(current_time) * 10.0;
-    // float y_pos = -cos(current_time) * 10.0;
-    // box_instance.position = glm::vec3(x_pos, y_pos, 1.0f);
+    // gfx::ModelInfo box_info = gfx::ModelInfo("assets/box.obj", &texture_manager, true);
+    // gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
+    //     glm::vec3(0.0f, 0.0f, 0.0f));
+    // box_instance.scale = glm::vec3(1.0f, 1.0f, 1.0f);
     // box_instance.Update();
 
-    // first_point_light.position = glm::vec3(x_pos, y_pos, 1.0f);
-    // game_window.UpdatePointLight(&first_point_light);
+    std::fill_n(keys, 1024, 0);
+    glfwSetKeyCallback(game_window.window, key_callback);
+    glfwSetMouseButtonCallback(game_window.window, mouse_button_callback);
+    glfwSetScrollCallback(game_window.window, scroll_callback);
 
-    game_window.PollForEvents();
-    handle_input(game_window.window);
-    update_camera();
+    double fps_print_time = 2.5;
+    double last_time = game_window.GetElapsedTime();
 
-    game_window.PrepareRender();
-    // game_window.RenderModel(&box_instance);
-    game_window.RenderModel(&prism_instance);
-    game_window.FinishRender();
+    // Main rendering loop.
+    while(game_window.IsRunning()) {
+      double current_time = game_window.GetElapsedTime();
+      double frame_time = current_time - last_time;
+      fps_print_time -= frame_time;
+      if (fps_print_time <= 0.0) {
+        std::cout << "FPS: " << 1.0 / frame_time << std::endl;
+        fps_print_time = 2.5;
+      }
+      last_time = current_time;
+
+      // Move the light in a circle.
+      // float x_pos = -sin(current_time) * 10.0;
+      // float y_pos = -cos(current_time) * 10.0;
+      // box_instance.position = glm::vec3(x_pos, y_pos, 1.0f);
+      // box_instance.Update();
+
+      // first_point_light.position = glm::vec3(x_pos, y_pos, 1.0f);
+      // game_window.UpdatePointLight(&first_point_light);
+
+      game_window.PollForEvents();
+      handle_input(game_window.window);
+      update_camera();
+
+      game_window.PrepareRender();
+      // game_window.RenderModel(&box_instance);
+      // game_window.RenderModel(&prism_instance);
+      game_window.RenderModel(&test_instance);
+      game_window.FinishRender();
+    }
+
+    glfwTerminate();
+    return EXIT_SUCCESS;
+  } catch (const std::exception& e) {
+    std::cerr << "ERROR: " << e.what() << std::endl;
+    return EXIT_FAILURE;
   }
-
-  glfwTerminate();
-  return EXIT_SUCCESS;
 }

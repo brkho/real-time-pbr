@@ -7,26 +7,30 @@
 #define GFX_MODEL_INFO_H
 
 #include "gfx/mappable.h"
+#include "gfx/material.h"
 #include "gfx/mesh.h"
 #include "gfx/texture_manager.h"
 
-#include <assimp/scene.h>
 #include <glad/glad.h>
 
+#include <fstream>
 #include <string>
 #include <vector>
 
 namespace gfx {
 
+// The base path for assets in the engine.
 const std::string assets_path = "assets";
+// Maps the shader type from the .eo object to an enum value.
+const std::vector<gfx::ShaderType> shader_map {gfx::BlinnPhong, gfx::CookTorrance,
+    gfx::AshikhminShirley};
 
 class ModelInfo : public gfx::Mappable {
   public:
     // The meshes contained in the ModelInfo.
     std::vector<gfx::Mesh> meshes;
 
-    // TODO: Use a homegrown compact format instead of assimp.
-    // Creates a ModelInfo by loading a model with assimp via its path and a TextureManage. The
+    // Creates a ModelInfo by loading an EO format model via its path and a TextureManage. The
     // should_map argument specifies whether the constructor should map its individual meshes.
     ModelInfo(std::string model_path, gfx::TextureManager* manager, bool should_map);
 
@@ -54,12 +58,11 @@ class ModelInfo : public gfx::Mappable {
     // Remaps all of the ModelInfo's meshes.
     void Remap();
   private:
-    // Loads a texture from an assimp material given a texture type by using a TextureManager. This
-    // loads the texture from file into OpenGL managed memory and returns a handle to the texture.
-    // This also takes a boolean specifying whether we should gamma correct the sRGB texture into
-    // linear space when loading into OpenGL.
-    GLuint LoadTexture(const aiMaterial* material, aiTextureType type, bool convert_to_linear,
-        gfx::TextureManager* manager);
+    // Loads the next material map path in the EO model stream given a TextureManager. This loads
+    // the map from file into OpenGL managed memory and returns a handle to the texture. This also
+    // takes a boolean specifying whether we should gamma correct the sRGB texture into linear
+    // space when loading into OpenGL.
+    GLuint LoadMap(std::ifstream* input_file, gfx::TextureManager* manager, bool convert_to_linear);
 };
 
 }
