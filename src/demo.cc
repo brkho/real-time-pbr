@@ -115,9 +115,9 @@ int main(int /* argc */, char* /* argv */[]) {
     gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kMainVertexShaderPath,
         kMainFragmentShaderPath, kHdrVertexShaderPath, kHdrFragmentShaderPath, &camera, 45.0f,
         gfx::Color(0.15f, 0.15f, 0.15f));
-    gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f));
-    game_window.SetDirectionalLight(&directional_light);
+    // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
+    //     glm::vec3(1.0f, 1.0f, 1.0f));
+    // game_window.SetDirectionalLight(&directional_light);
 
     gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(5.0f, 5.0f, 5.0f), 1.0f, 0.3f,
         0.04f, glm::vec3(3.0f, 3.0f, 3.0f));

@@ -108,15 +108,25 @@ class GameWindow {
     // in turn rendered with the hdr_program.
     GLuint program;
 
+    // The width of the viewport.
+    GLuint vp_width;
+
+    // The height of the viewport.
+    GLuint vp_height;
+
     // The HDR shader program that takes the output of the main shader program and tone maps it
     // into LDR space for the final render.
     GLuint hdr_program;
 
     // The Framebuffer Object (with greater floating point precision) that is written to by the
-    // main shader and then subsequently used for rendering by the HDR program.
-    GLuint hdr_fbo;
+    // main shader and then subsequently used for rendering by the HDR program. This is
+    // multisampled for MSAA.
+    GLuint multisampled_hdr_fbo;
 
-    // The color buffer that s the render target of the main shader.
+    // The single sampled FBO that is blit to from the multisampled FBO.
+    GLuint singlesampled_hdr_fbo;
+
+    // The single sampled color buffer that is used with the intermediate FBO.
     GLuint hdr_color_buffer;
 
     // The quad used by the HDR shader for drawing the HDR texture output by the main shader.

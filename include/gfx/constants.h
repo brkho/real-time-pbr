@@ -11,7 +11,10 @@
 
 namespace gfx {
 
+// The maximum number of point lights in a scene.
 const unsigned int MAX_POINT_LIGHTS = 3;
+// The number of samples for MSAA.
+const unsigned int MSAA_SAMPLES = 4;
 
 }
 #endif // GFX_CONSTANTS_H
