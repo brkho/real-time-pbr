@@ -27,6 +27,7 @@ uniform bool specular_enabled;
 uniform bool gloss_enabled;
 uniform bool ior_enabled;
 uniform bool normal_enabled;
+uniform bool ao_enabled;
 uniform float ambient_coefficient;
 uniform float shininess;
 uniform vec4 base_color;
@@ -36,6 +37,7 @@ uniform sampler2D specular_map;
 uniform sampler2D gloss_map;
 uniform sampler2D ior_map;
 uniform sampler2D normal_map;
+uniform sampler2D ao_map;
 
 in vec2 UV;
 in vec3 WorldPosition;
@@ -84,11 +86,12 @@ void main() {
   vec4 albedo_color = albedo_enabled ? texture(albedo_map, UV) : vec4(1.0, 1.0, 1.0, 1.0);
   vec3 specular_color = specular_enabled ? vec3(texture(specular_map, UV)) :
       vec3(1.0, 1.0, 1.0);
+  vec3 ao_value = ao_enabled ? vec3(texture(ao_map, UV)) : vec3(1.0, 1.0, 1.0);
   vec3 tangent_space_normal = normal_enabled ? vec3(texture(normal_map, UV)) : vec3(0.5, 0.5, 1.0);
   tangent_space_normal = normalize((tangent_space_normal * 2.0) - 1.0) * vec3(1.0, -1.0, 1.0);
   tangent_space_normal = vec3(tangent_space_normal.x, tangent_space_normal.y, tangent_space_normal.z);
   vec3 normal = normalize(TBN * tangent_space_normal);
-  vec4 total_color = ambient_coefficient * albedo_color;
+  vec4 total_color = vec4((ambient_coefficient * ao_value), 1.0) * albedo_color;
 
   if (directional_light.enabled) {
     total_color += get_directional_light_contribution(albedo_color, specular_color, normal);

@@ -29,8 +29,9 @@ gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, 
   GLuint gloss_handle = LoadMap(&input_file, manager, false);
   GLuint ior_handle = LoadMap(&input_file, manager, false);
   GLuint normal_handle = LoadMap(&input_file, manager, false);
+  GLuint ao_handle = LoadMap(&input_file, manager, false);
   std::shared_ptr<gfx::Material> material(new gfx::Material(shader_type, albedo_handle,
-      specular_handle, gloss_handle, ior_handle, normal_handle, 0.01));
+      specular_handle, gloss_handle, ior_handle, normal_handle, ao_handle, 0.05));
 
   // Copy the vertices directly into memory.
   size_t num_vertices;

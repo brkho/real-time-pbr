@@ -22,15 +22,17 @@ class Material {
 
     // Constructs a material with a shader type, an OpenGL handle to an albedo map, an OpenGL
     // handle to a specular map, an OpenGL handle to a gloss map, an OpenGL handle to an IOR map,
-    // an OpenGL handle to a normal map, and an ambient lighting coefficient.. Use handles of 0 to
-    // use no map. If no map is specified (by using a handle of 0), these defaults are used:
+    // an OpenGL handle to a normal map, an OpenGL handle to an AO map, and an ambient lighting
+    // coefficient. Use handles of 0 to use no map. If no map is specified (by using a handle of
+    // 0), these defaults are used:
     // albedo: all white
     // specular: no specular reflection (all black)
     // gloss: TBD
     // IOR: TBD
     // normal: unmodified model normals (all (127, 127, 127))
     Material(ShaderType shader_type, GLuint albedo_handle, GLuint specular_handle,
-        GLuint gloss_handle, GLuint ior_handle, GLuint normal_handle, GLfloat ambient);
+        GLuint gloss_handle, GLuint ior_handle, GLuint normal_handle, GLuint ao_handle,
+        GLfloat ambient);
 
     // Destroys the material by clearing the material maps.
     ~Material();
@@ -54,6 +56,8 @@ class Material {
     GLuint ior_handle;
     // The OpenGL handle to the normal map.
     GLuint normal_handle;
+    // The OpenGL handle to the ambient occlusion map.
+    GLuint ao_handle;
 };
 
 }

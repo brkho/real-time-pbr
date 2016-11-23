@@ -3,10 +3,10 @@
 #include <iostream>
 
 gfx::Material::Material(gfx::ShaderType shader_type, GLuint albedo_handle, GLuint specular_handle,
-    GLuint gloss_handle, GLuint ior_handle, GLuint normal_handle, GLfloat ambient) :
-    ambient_coefficient{ambient}, shader_type{shader_type}, albedo_handle{albedo_handle},
-    specular_handle{specular_handle}, gloss_handle{gloss_handle}, ior_handle{ior_handle},
-    normal_handle{normal_handle} {}
+    GLuint gloss_handle, GLuint ior_handle, GLuint normal_handle, GLuint ao_handle,
+    GLfloat ambient) : ambient_coefficient{ambient}, shader_type{shader_type},
+    albedo_handle{albedo_handle}, specular_handle{specular_handle}, gloss_handle{gloss_handle},
+    ior_handle{ior_handle}, normal_handle{normal_handle}, ao_handle{ao_handle} {}
 
 gfx::Material::~Material() {
   return;
@@ -57,6 +57,14 @@ void gfx::Material::UseMaterial(GLuint program) {
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, normal_handle);
     glUniform1i(glGetUniformLocation(program, "normal_map"), 4);
+  }
+
+  GLint ao_enabled_location = glGetUniformLocation(program, "ao_enabled");
+  glUniform1i(ao_enabled_location, ao_handle != 0);
+  if (ao_handle != 0) {
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, ao_handle);
+    glUniform1i(glGetUniformLocation(program, "ao_map"), 5);
   }
 }
 

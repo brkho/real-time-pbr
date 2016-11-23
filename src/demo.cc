@@ -134,6 +134,11 @@ int main(int /* argc */, char* /* argv */[]) {
     gfx::ModelInstance sculpture_instance = gfx::ModelInstance(&sculpture_info,
         glm::vec3(0.0f, 0.0f, 0.0f));
 
+    gfx::ModelInfo drawers_info = gfx::ModelInfo("assets/drawers/drawers_ao.eo",
+        &texture_manager, true);
+    gfx::ModelInstance drawers_instance = gfx::ModelInstance(&drawers_info,
+        glm::vec3(0.0f, 0.0f, 0.0f));
+
     // gfx::ModelInfo prism_info = gfx::ModelInfo("assets/tunnel.fbx", &texture_manager, true);
     // gfx::ModelInstance prism_instance = gfx::ModelInstance(&prism_info,
     //     glm::vec3(0.0f, -15.0f, 0.0f));
@@ -182,7 +187,7 @@ int main(int /* argc */, char* /* argv */[]) {
       game_window.PrepareRender();
       game_window.RenderModel(&box_instance);
       // game_window.RenderModel(&prism_instance);
-      game_window.RenderModel(&sculpture_instance);
+      game_window.RenderModel(&drawers_instance);
       game_window.FinishRender();
     }
 
