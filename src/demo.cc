@@ -15,6 +15,7 @@
 
 #include <exception>
 #include <iostream>
+#include <vector>
 
 const int kWindowWidth = 1280;
 const int kWindowHeight = 800;
@@ -129,28 +130,26 @@ int main(int /* argc */, char* /* argv */[]) {
 
     gfx::TextureManager texture_manager;
 
+    std::vector<gfx::ModelInstance*> model_instances;
+
     gfx::ModelInfo sculpture_info = gfx::ModelInfo("assets/sculpture/sculpture.eo",
         &texture_manager, true);
-    gfx::ModelInstance sculpture_instance = gfx::ModelInstance(&sculpture_info,
+    gfx::ModelInstance* sculpture_instance = new gfx::ModelInstance(&sculpture_info,
         glm::vec3(0.0f, 0.0f, 0.0f));
+    model_instances.push_back(sculpture_instance);
 
-    gfx::ModelInfo drawers_info = gfx::ModelInfo("assets/drawers/drawers_ao.eo",
+    gfx::ModelInfo drawers_info = gfx::ModelInfo("assets/drawers/drawers.eo",
         &texture_manager, true);
-    gfx::ModelInstance drawers_instance = gfx::ModelInstance(&drawers_info,
+    gfx::ModelInstance* drawers_instance = new gfx::ModelInstance(&drawers_info,
         glm::vec3(0.0f, 0.0f, 0.0f));
-
-    // gfx::ModelInfo prism_info = gfx::ModelInfo("assets/tunnel.fbx", &texture_manager, true);
-    // gfx::ModelInstance prism_instance = gfx::ModelInstance(&prism_info,
-    //     glm::vec3(0.0f, -15.0f, 0.0f));
-    // prism_instance.scale = glm::vec3(1.0f, 5.0f, 1.0f);
-    // // prism_instance.rotation = glm::quat(0.70711f, 0.0f, 0.70711f, 0.0f);
-    // prism_instance.Update();
+    model_instances.push_back(drawers_instance);
 
     gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box.eo", &texture_manager, true);
-    gfx::ModelInstance box_instance = gfx::ModelInstance(&box_info,
+    gfx::ModelInstance* box_instance = new gfx::ModelInstance(&box_info,
         glm::vec3(3.0f, 3.0f, 3.0f));
-    box_instance.scale = glm::vec3(0.3f, 0.3f, 0.3f);
-    box_instance.Update();
+    // box_instance->scale = glm::vec3(0.3f, 0.3f, 0.3f);
+    box_instance->Update();
+    model_instances.push_back(box_instance);
 
     std::fill_n(keys, 1024, 0);
     glfwSetKeyCallback(game_window.window, key_callback);
@@ -185,9 +184,9 @@ int main(int /* argc */, char* /* argv */[]) {
       update_camera();
 
       game_window.PrepareRender();
-      game_window.RenderModel(&box_instance);
-      // game_window.RenderModel(&prism_instance);
-      game_window.RenderModel(&drawers_instance);
+      for (gfx::ModelInstance* instance : model_instances) {
+        game_window.RenderModel(instance);
+      }
       game_window.FinishRender();
     }
 
