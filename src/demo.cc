@@ -116,11 +116,11 @@ int main(int /* argc */, char* /* argv */[]) {
     gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kMainVertexShaderPath,
         kMainFragmentShaderPath, kHdrVertexShaderPath, kHdrFragmentShaderPath, &camera, 45.0f,
         gfx::Color(0.15f, 0.15f, 0.15f));
-    // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, 1.0f, -1.0f),
-    //     glm::vec3(1.0f, 1.0f, 1.0f));
+    // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f),
+    //     glm::vec3(3.0f, 3.0f, 3.0f));
     // game_window.SetDirectionalLight(&directional_light);
 
-    gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(5.0f, 5.0f, 5.0f), 1.0f, 0.3f,
+    gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(8.0f, 8.0f, 8.0f), 1.0f, 0.3f,
         0.04f, glm::vec3(3.0f, 3.0f, 3.0f));
     game_window.AddPointLight(&first_point_light);
 
@@ -132,22 +132,22 @@ int main(int /* argc */, char* /* argv */[]) {
 
     std::vector<gfx::ModelInstance*> model_instances;
 
-    gfx::ModelInfo sculpture_info = gfx::ModelInfo("assets/sculpture/sculpture.eo",
-        &texture_manager, true);
-    gfx::ModelInstance* sculpture_instance = new gfx::ModelInstance(&sculpture_info,
-        glm::vec3(0.0f, 0.0f, 0.0f));
-    model_instances.push_back(sculpture_instance);
+    // gfx::ModelInfo sculpture_info = gfx::ModelInfo("assets/sculpture/sculpture.eo",
+    //     &texture_manager, true);
+    // gfx::ModelInstance* sculpture_instance = new gfx::ModelInstance(&sculpture_info,
+    //     glm::vec3(0.0f, 0.0f, 0.0f));
+    // model_instances.push_back(sculpture_instance);
 
-    gfx::ModelInfo drawers_info = gfx::ModelInfo("assets/drawers/drawers.eo",
-        &texture_manager, true);
-    gfx::ModelInstance* drawers_instance = new gfx::ModelInstance(&drawers_info,
-        glm::vec3(0.0f, 0.0f, 0.0f));
-    model_instances.push_back(drawers_instance);
+    // gfx::ModelInfo drawers_info = gfx::ModelInfo("assets/drawers/drawers.eo",
+    //     &texture_manager, true);
+    // gfx::ModelInstance* drawers_instance = new gfx::ModelInstance(&drawers_info,
+    //     glm::vec3(0.0f, 0.0f, 0.0f));
+    // model_instances.push_back(drawers_instance);
 
-    gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box.eo", &texture_manager, true);
+    gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box_no_maps.eo", &texture_manager, true);
     gfx::ModelInstance* box_instance = new gfx::ModelInstance(&box_info,
         glm::vec3(3.0f, 3.0f, 3.0f));
-    // box_instance->scale = glm::vec3(0.3f, 0.3f, 0.3f);
+    box_instance->scale = glm::vec3(5.0f, 5.0f, 5.0f);
     box_instance->Update();
     model_instances.push_back(box_instance);
 
