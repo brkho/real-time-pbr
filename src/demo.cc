@@ -138,7 +138,7 @@ int main(int /* argc */, char* /* argv */[]) {
     //     glm::vec3(0.0f, 0.0f, 0.0f));
     // model_instances.push_back(sculpture_instance);
 
-    gfx::ModelInfo drawers_info = gfx::ModelInfo("assets/drawers/drawers_no_maps.eo",
+    gfx::ModelInfo drawers_info = gfx::ModelInfo("assets/drawers/drawers.eo",
         &texture_manager, true);
     gfx::ModelInstance* drawers_instance = new gfx::ModelInstance(&drawers_info,
         glm::vec3(0.0f, 0.0f, 0.0f));

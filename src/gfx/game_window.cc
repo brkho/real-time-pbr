@@ -81,15 +81,8 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, 8, 8, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, bayer_matrix);
-
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, hdr_color_buffer);
   glUniform1i(glGetUniformLocation(hdr_program, "hdrBuffer"), 0);
-
   glUniform2ui(glGetUniformLocation(hdr_program, "dimensions"), vp_width, vp_height);
-
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, 3);
   glUniform1i(glGetUniformLocation(hdr_program, "bayer_matrix"), 1);
 
   glUseProgram(program);
@@ -317,6 +310,10 @@ void gfx::GameWindow::RenderModel(gfx::ModelInstance* model_instance) {
 
 void gfx::GameWindow::FinishRender() {
   glUseProgram(hdr_program);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, hdr_color_buffer);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, matrix_handle);
 
   // Blit from the multisampled FBO to the singlesampled FBO.
   // TODO(brkho): Investigate whether it's better to blit from a renderbuffer to a texture.
