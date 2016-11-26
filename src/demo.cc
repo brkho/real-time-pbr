@@ -121,7 +121,7 @@ int main(int /* argc */, char* /* argv */[]) {
     // game_window.SetDirectionalLight(&directional_light);
 
     gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(8.0f, 8.0f, 8.0f), 1.0f, 0.3f,
-        0.04f, glm::vec3(3.0f, 3.0f, 3.0f));
+        0.04f, glm::vec3(2.0f, 2.0f, 2.0f));
     game_window.AddPointLight(&first_point_light);
 
     // gfx::PointLight second_point_light = gfx::PointLight(glm::vec3(2.0f, 2.0f, 0.0f), 1.0f, 0.14f,
@@ -138,18 +138,18 @@ int main(int /* argc */, char* /* argv */[]) {
     //     glm::vec3(0.0f, 0.0f, 0.0f));
     // model_instances.push_back(sculpture_instance);
 
-    // gfx::ModelInfo drawers_info = gfx::ModelInfo("assets/drawers/drawers.eo",
-    //     &texture_manager, true);
-    // gfx::ModelInstance* drawers_instance = new gfx::ModelInstance(&drawers_info,
-    //     glm::vec3(0.0f, 0.0f, 0.0f));
-    // model_instances.push_back(drawers_instance);
+    gfx::ModelInfo drawers_info = gfx::ModelInfo("assets/drawers/drawers_no_maps.eo",
+        &texture_manager, true);
+    gfx::ModelInstance* drawers_instance = new gfx::ModelInstance(&drawers_info,
+        glm::vec3(0.0f, 0.0f, 0.0f));
+    model_instances.push_back(drawers_instance);
 
-    gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box_no_maps.eo", &texture_manager, true);
-    gfx::ModelInstance* box_instance = new gfx::ModelInstance(&box_info,
-        glm::vec3(3.0f, 3.0f, 3.0f));
-    box_instance->scale = glm::vec3(5.0f, 5.0f, 5.0f);
-    box_instance->Update();
-    model_instances.push_back(box_instance);
+    // gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box_no_maps.eo", &texture_manager, true);
+    // gfx::ModelInstance* box_instance = new gfx::ModelInstance(&box_info,
+    //     glm::vec3(3.0f, 3.0f, 3.0f));
+    // box_instance->scale = glm::vec3(5.0f, 5.0f, 5.0f);
+    // box_instance->Update();
+    // model_instances.push_back(box_instance);
 
     std::fill_n(keys, 1024, 0);
     glfwSetKeyCallback(game_window.window, key_callback);

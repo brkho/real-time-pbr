@@ -13,8 +13,8 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
     std::string main_fragment_path, std::string hdr_vertex_path, std::string hdr_fragment_path,
     gfx::Camera* camera, float fov, gfx::Color color) : camera{camera}, window{nullptr},
     field_of_view{fov}, program{0}, vp_width{0}, vp_height{0}, hdr_program{0},
-    multisampled_hdr_fbo{0}, singlesampled_hdr_fbo{0}, hdr_color_buffer{0}, draw_quad{nullptr},
-    quad_vertices{nullptr}, quad_elements{nullptr}, directional_light{nullptr} {
+    multisampled_hdr_fbo{0}, singlesampled_hdr_fbo{0}, hdr_color_buffer{0}, matrix_handle{0},
+    draw_quad{nullptr}, quad_vertices{nullptr}, quad_elements{nullptr}, directional_light{nullptr} {
   for (unsigned int i = 0; i < gfx::MAX_POINT_LIGHTS; i++) {
     point_lights[i] = nullptr;
   }
@@ -72,6 +72,26 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
   quad_vertices->push_back(gfx::GameWindow::PositionToQuadVertex(glm::vec3(1.0f, 1.9f, 0.0f)));
   quad_elements = new std::vector<GLuint>{0, 1, 3, 3, 2, 0};
   draw_quad = new gfx::Mesh(quad_vertices, quad_elements, nullptr, true);
+
+  // Set up the dithering texture to combat banding in low lighting conditions.
+  glGenTextures(1, &matrix_handle);
+  glBindTexture(GL_TEXTURE_2D, matrix_handle);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, 8, 8, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, bayer_matrix);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, hdr_color_buffer);
+  glUniform1i(glGetUniformLocation(hdr_program, "hdrBuffer"), 0);
+
+  glUniform2ui(glGetUniformLocation(hdr_program, "dimensions"), vp_width, vp_height);
+
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, 3);
+  glUniform1i(glGetUniformLocation(hdr_program, "bayer_matrix"), 1);
+
   glUseProgram(program);
 }
 
@@ -309,8 +329,6 @@ void gfx::GameWindow::FinishRender() {
   // Bind the default frame buffer, so we can actually render to the screen.
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, hdr_color_buffer);
 
   // Render a quad that covers the entire screen so we can actually use the texture produced by the
   // main shader.

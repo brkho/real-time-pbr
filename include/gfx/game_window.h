@@ -25,6 +25,18 @@
 
 namespace gfx {
 
+// Bayer Matrix for ordered dithing used to combat banding in low light scenes.
+// From: http://www.anisopteragames.com/how-to-fix-color-banding-with-dithering/
+const char bayer_matrix[] = {
+  10, 32,  8, 40,  2, 34, 10, 42,
+  48, 16, 56, 24, 50, 18, 58, 26,
+  12, 44,  4, 36, 14, 46,  6, 38,
+  60, 28, 52, 20, 62, 30, 54, 22,
+  3, 35, 11, 43,  1, 33,  9, 41,
+  51, 19, 59, 27, 49, 17, 57, 25,
+  15, 47,  7, 39, 13, 45,  5, 37,
+  63, 31, 55, 23, 61, 29, 53, 21};
+
 class GameWindow {
   public:
     // A reference to the camera used to render the scene.
@@ -128,6 +140,9 @@ class GameWindow {
 
     // The single sampled color buffer that is used with the intermediate FBO.
     GLuint hdr_color_buffer;
+
+    // The handle to the texture storing the Bayer matrix used for dithering.
+    GLuint matrix_handle;
 
     // The quad used by the HDR shader for drawing the HDR texture output by the main shader.
     gfx::Mesh* draw_quad;
