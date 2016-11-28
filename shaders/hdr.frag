@@ -7,15 +7,30 @@ in vec2 UV;
 out vec4 out_color;
 
 uniform usampler2D bayer_matrix;
-uniform sampler2D hdrBuffer;
+uniform sampler2DMS hdrBuffer;
 uniform uvec2 dimensions;
+
+vec3 reinhard_map(vec3 hdr_color) {
+  vec3 mapped = hdr_color / (hdr_color + vec3(1.0));
+  return mapped;
+}
 
 void main() {
   // Gamma correction and tone mapping.
-  vec3 hdr_color = vec3(texture(hdrBuffer, UV));
+  ivec2 coords = ivec2(int(UV.s * dimensions.x), int(UV.t * dimensions.y));
+  // vec3 hdr_color = vec3(texelFetch(hdrBuffer, coords, 0));
+
+  vec3 hdr_color = vec3(0.0);
+  hdr_color += reinhard_map(vec3(texelFetch(hdrBuffer, coords, 0)));
+  hdr_color += reinhard_map(vec3(texelFetch(hdrBuffer, coords, 1)));
+  hdr_color += reinhard_map(vec3(texelFetch(hdrBuffer, coords, 2)));
+  hdr_color += reinhard_map(vec3(texelFetch(hdrBuffer, coords, 3)));
+
+  hdr_color /= 4.0;
+
   vec3 reinhard_mapped = hdr_color / (hdr_color + vec3(1.0));
-  vec3 gamma_corrected = pow(reinhard_mapped, vec3(1.0 / GAMMA));
-  out_color = vec4(gamma_corrected, 1.0);
+  reinhard_mapped = hdr_color;
+  out_color = vec4(pow(hdr_color, vec3(1.0 / GAMMA)), 1.0);
 
   // Ordered dithering.
   vec2 texel_dimensions = UV * vec2(dimensions);

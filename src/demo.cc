@@ -116,12 +116,13 @@ int main(int /* argc */, char* /* argv */[]) {
     gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kMainVertexShaderPath,
         kMainFragmentShaderPath, kHdrVertexShaderPath, kHdrFragmentShaderPath, &camera, 45.0f,
         gfx::Color(0.15f, 0.15f, 0.15f));
-    // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f),
-    //     glm::vec3(3.0f, 3.0f, 3.0f));
+
+    // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(0.0f, -1.0f, 0.0f),
+    //     glm::vec3(2.0f, 2.0f, 2.0f));
     // game_window.SetDirectionalLight(&directional_light);
 
-    gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(8.0f, 8.0f, 8.0f), 1.0f, 0.3f,
-        0.04f, glm::vec3(2.0f, 2.0f, 2.0f));
+    gfx::PointLight first_point_light = gfx::PointLight(glm::vec3(8.0f, 8.0f, 16.0f), 1.0f, 0.3f,
+        0.04f, glm::vec3(40.0f, 40.0f, 40.0f));
     game_window.AddPointLight(&first_point_light);
 
     // gfx::PointLight second_point_light = gfx::PointLight(glm::vec3(2.0f, 2.0f, 0.0f), 1.0f, 0.14f,
@@ -144,12 +145,24 @@ int main(int /* argc */, char* /* argv */[]) {
         glm::vec3(0.0f, 0.0f, 0.0f));
     model_instances.push_back(drawers_instance);
 
-    // gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box_no_maps.eo", &texture_manager, true);
-    // gfx::ModelInstance* box_instance = new gfx::ModelInstance(&box_info,
-    //     glm::vec3(3.0f, 3.0f, 3.0f));
-    // box_instance->scale = glm::vec3(5.0f, 5.0f, 5.0f);
-    // box_instance->Update();
-    // model_instances.push_back(box_instance);
+    gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box_no_maps.eo", &texture_manager, true);
+    box_info.GetMaterial()->albedo_info.value = glm::vec3(1.0, 0.0, 0.0);
+    gfx::ModelInstance* box_instance = new gfx::ModelInstance(&box_info,
+        glm::vec3(8.0f, 8.0f, 8.0f));
+    box_instance->scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    box_instance->Update();
+    model_instances.push_back(box_instance);
+
+    // for (int x = 0; x < 10; x++) {
+    //   for (int y = 0; y < 10; y++) {
+    //     gfx::ModelInfo* sphere_info = new gfx::ModelInfo("assets/primitives/sphere_no_maps.eo", &texture_manager, true);
+    //     sphere_info->GetMaterial()->albedo_info.value = glm::vec3(0.3, 0.0, 0.0);
+    //     sphere_info->GetMaterial()->metallic_info.value = glm::vec3(float(x) / 10.0, 0.0, 0.0);
+    //     sphere_info->GetMaterial()->roughness_info.value = glm::vec3(float(y) / 10.0, 0.0, 0.0);
+    //     gfx::ModelInstance* sphere_instance = new gfx::ModelInstance(sphere_info, glm::vec3((float)(x - 5) * 2.5, 0.0f, (float)(y - 5) * 2.5));
+    //     model_instances.push_back(sphere_instance);
+    //   }
+    // }
 
     std::fill_n(keys, 1024, 0);
     glfwSetKeyCallback(game_window.window, key_callback);

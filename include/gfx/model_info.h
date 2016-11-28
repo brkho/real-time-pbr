@@ -14,6 +14,7 @@
 #include <glad/glad.h>
 
 #include <fstream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -57,6 +58,9 @@ class ModelInfo : public gfx::Mappable {
 
     // Remaps all of the ModelInfo's meshes.
     void Remap();
+
+    // Returns a shared_ptr to the material.
+    std::shared_ptr<gfx::Material> GetMaterial();
   private:
     // Loads the next material map path in the EO model stream given a TextureManager. This loads
     // the map from file into OpenGL managed memory and returns a handle to the texture. This also

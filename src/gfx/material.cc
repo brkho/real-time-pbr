@@ -1,12 +1,13 @@
 #include "gfx/material.h"
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 
-gfx::Material::Material(gfx::ShaderType shader_type, GLuint albedo_handle, GLuint specular_handle,
-    GLuint gloss_handle, GLuint ior_handle, GLuint normal_handle, GLuint ao_handle,
-    GLfloat ambient) : ambient_coefficient{ambient}, shader_type{shader_type},
-    albedo_handle{albedo_handle}, specular_handle{specular_handle}, gloss_handle{gloss_handle},
-    ior_handle{ior_handle}, normal_handle{normal_handle}, ao_handle{ao_handle} {}
+gfx::Material::Material(ShaderType shader_type, MapInfo albedo_info, MapInfo metallic_info,
+    MapInfo roughness_info, MapInfo normal_info, MapInfo ao_info, GLfloat ambient) :
+    ambient_coefficient{ambient}, albedo_info{albedo_info}, metallic_info{metallic_info},
+    roughness_info{roughness_info}, normal_info{normal_info}, ao_info{ao_info},
+    shader_type{shader_type} {}
 
 gfx::Material::~Material() {
   return;
@@ -19,60 +20,36 @@ void gfx::Material::UseMaterial(GLuint program) {
   GLint ambient_location = glGetUniformLocation(program, "ambient_coefficient");
   glUniform1f(ambient_location, ambient_coefficient);
 
-  GLint albedo_enabled_location = glGetUniformLocation(program, "albedo_enabled");
-  glUniform1i(albedo_enabled_location, albedo_handle != 0);
-  if (albedo_handle != 0) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, albedo_handle);
-    glUniform1i(glGetUniformLocation(program, "albedo_map"), 0);
-  }
-
-  GLint specular_enabled_location = glGetUniformLocation(program, "specular_enabled");
-  glUniform1i(specular_enabled_location, specular_handle != 0);
-  if (specular_handle != 0) {
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, specular_handle);
-    glUniform1i(glGetUniformLocation(program, "specular_map"), 1);
-  }
-
-  GLint gloss_enabled_location = glGetUniformLocation(program, "gloss_enabled");
-  glUniform1i(gloss_enabled_location, gloss_handle != 0);
-  if (gloss_handle != 0) {
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, gloss_handle);
-    glUniform1i(glGetUniformLocation(program, "gloss_map"), 2);
-  }
-
-  GLint ior_enabled_location = glGetUniformLocation(program, "ior_enabled");
-  glUniform1i(ior_enabled_location, ior_handle != 0);
-  if (ior_handle != 0) {
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, ior_handle);
-    glUniform1i(glGetUniformLocation(program, "ior_map"), 3);
-  }
-
-  GLint normal_enabled_location = glGetUniformLocation(program, "normal_enabled");
-  glUniform1i(normal_enabled_location, normal_handle != 0);
-  if (normal_handle != 0) {
-    glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, normal_handle);
-    glUniform1i(glGetUniformLocation(program, "normal_map"), 4);
-  }
-
-  GLint ao_enabled_location = glGetUniformLocation(program, "ao_enabled");
-  glUniform1i(ao_enabled_location, ao_handle != 0);
-  if (ao_handle != 0) {
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, ao_handle);
-    glUniform1i(glGetUniformLocation(program, "ao_map"), 5);
-  }
+  BindMap(program, albedo_info, "albedo", 0);
+  BindMap(program, metallic_info, "metallic", 1);
+  BindMap(program, roughness_info, "roughness", 2);
+  BindMap(program, normal_info, "normal", 3);
+  BindMap(program, ao_info, "ao", 4);
 }
 
 void gfx::Material::RemoveTexture(GLuint id) {
-  if (albedo_handle == id) {
-    albedo_handle = 0;
+  if (albedo_info.handle == id) {
+    albedo_info.handle = 0;
+  } else if (metallic_info.handle == id) {
+    metallic_info.handle = 0;
+  } else if (roughness_info.handle == id) {
+    roughness_info.handle = 0;
+  } else if (normal_info.handle == id) {
+    normal_info.handle = 0;
+  } else if (ao_info.handle == id) {
+    ao_info.handle = 0;
   }
-  if (specular_handle == id) {
-    specular_handle = 0;
+}
+
+void gfx::Material::BindMap(GLuint program, MapInfo info, std::string map_type,
+    GLuint texture_unit) {
+  glUniform1i(glGetUniformLocation(program, (map_type + "_map.enabled").c_str()), info.handle != 0);
+  if (info.handle == 0) {
+    glUniform3fv(glGetUniformLocation(program, (map_type + "_map.default_value").c_str()), 1,
+        glm::value_ptr(info.value));
+  } else {
+    glActiveTexture(GL_TEXTURE0 + texture_unit);
+    glBindTexture(GL_TEXTURE_2D, info.handle);
+    glUniform1i(glGetUniformLocation(program, (map_type + "_map.map").c_str()), texture_unit);
   }
 }

@@ -135,11 +135,8 @@ class GameWindow {
     // multisampled for MSAA.
     GLuint multisampled_hdr_fbo;
 
-    // The single sampled FBO that is blit to from the multisampled FBO.
-    GLuint singlesampled_hdr_fbo;
-
-    // The single sampled color buffer that is used with the intermediate FBO.
-    GLuint hdr_color_buffer;
+    // Color buffer used with the multisampled FBO.
+    GLuint multisampled_hdr_color_buffer;
 
     // The handle to the texture storing the Bayer matrix used for dithering.
     GLuint matrix_handle;

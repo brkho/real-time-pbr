@@ -13,8 +13,8 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
     std::string main_fragment_path, std::string hdr_vertex_path, std::string hdr_fragment_path,
     gfx::Camera* camera, float fov, gfx::Color color) : camera{camera}, window{nullptr},
     field_of_view{fov}, program{0}, vp_width{0}, vp_height{0}, hdr_program{0},
-    multisampled_hdr_fbo{0}, singlesampled_hdr_fbo{0}, hdr_color_buffer{0}, matrix_handle{0},
-    draw_quad{nullptr}, quad_vertices{nullptr}, quad_elements{nullptr}, directional_light{nullptr} {
+    multisampled_hdr_fbo{0}, multisampled_hdr_color_buffer{0}, matrix_handle{0}, draw_quad{nullptr},
+    quad_vertices{nullptr}, quad_elements{nullptr}, directional_light{nullptr} {
   for (unsigned int i = 0; i < gfx::MAX_POINT_LIGHTS; i++) {
     point_lights[i] = nullptr;
   }
@@ -37,7 +37,7 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
   // Generate the intermediate framebuffer which stores the HDR output.
   glGenFramebuffers(1, &multisampled_hdr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, multisampled_hdr_fbo);
-  GLuint multisampled_hdr_color_buffer;
+  // GLuint multisampled_hdr_color_buffer;
   glGenTextures(1, &multisampled_hdr_color_buffer);
   glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, multisampled_hdr_color_buffer);
   glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, gfx::MSAA_SAMPLES, GL_RGBA16F, vp_width,
@@ -50,17 +50,6 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
   glRenderbufferStorageMultisample(GL_RENDERBUFFER, gfx::MSAA_SAMPLES, GL_DEPTH_COMPONENT,
       vp_width, vp_height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rbo);
-
-  // Set up a non-multisampled FBO to blit from the multisampled FBO. I don't think this needs a
-  // depth buffer since it's only ever used to convert from multisampled to singlesampled texture.
-  glGenFramebuffers(1, &singlesampled_hdr_fbo);
-  glBindFramebuffer(GL_FRAMEBUFFER, singlesampled_hdr_fbo);
-  glGenTextures(1, &hdr_color_buffer);
-  glBindTexture(GL_TEXTURE_2D, hdr_color_buffer);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, vp_width, vp_height, 0, GL_RGB, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_color_buffer, 0);
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   // Set up quad used for rendering the output texture.
@@ -123,6 +112,8 @@ void gfx::GameWindow::InitializeGameWindow(int width, int height, gfx::Color col
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
+  glEnable(GL_SAMPLE_SHADING);
+  glMinSampleShading(0.5);
 
   gfx::GameWindow::SetBufferClearColor(color);
   gfx::GameWindow::UpdateDimensions(width, height);
@@ -311,17 +302,9 @@ void gfx::GameWindow::RenderModel(gfx::ModelInstance* model_instance) {
 void gfx::GameWindow::FinishRender() {
   glUseProgram(hdr_program);
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, hdr_color_buffer);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, multisampled_hdr_color_buffer);
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, matrix_handle);
-
-  // Blit from the multisampled FBO to the singlesampled FBO.
-  // TODO(brkho): Investigate whether it's better to blit from a renderbuffer to a texture.
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampled_hdr_fbo);
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, singlesampled_hdr_fbo);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glBlitFramebuffer(0, 0, vp_width, vp_height, 0, 0, vp_width, vp_height, GL_COLOR_BUFFER_BIT,
-      GL_NEAREST);
 
   // Bind the default frame buffer, so we can actually render to the screen.
   glBindFramebuffer(GL_FRAMEBUFFER, 0);

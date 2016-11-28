@@ -23,15 +23,20 @@ gfx::ModelInfo::ModelInfo(std::string model_path, gfx::TextureManager* manager, 
   }
   gfx::ShaderType shader_type = gfx::shader_map[(size_t)shader_type_value];
 
-  // Get the material info.
-  GLuint albedo_handle = LoadMap(&input_file, manager, true);
-  GLuint specular_handle = LoadMap(&input_file, manager, false);
-  GLuint gloss_handle = LoadMap(&input_file, manager, false);
-  GLuint ior_handle = LoadMap(&input_file, manager, false);
-  GLuint normal_handle = LoadMap(&input_file, manager, false);
-  GLuint ao_handle = LoadMap(&input_file, manager, false);
-  std::shared_ptr<gfx::Material> material(new gfx::Material(shader_type, albedo_handle,
-      specular_handle, gloss_handle, ior_handle, normal_handle, ao_handle, 0.05));
+  // Get the material info with defaults.
+  // MAYBE SWITCH THIS TO LINEAR TO GET QUIXEL TO WORK WITH IT.
+  gfx::MapInfo albedo_info = gfx::MapInfo{LoadMap(&input_file, manager, false),
+      glm::vec3(1.0, 1.0, 1.0)};
+  gfx::MapInfo metallic_info = gfx::MapInfo{LoadMap(&input_file, manager, false),
+      glm::vec3(0.0, 0.0, 0.0)};
+  gfx::MapInfo roughness_info = gfx::MapInfo{LoadMap(&input_file, manager, false),
+      glm::vec3(0.5, 0.5, 0.5)};
+  gfx::MapInfo normal_info = gfx::MapInfo{LoadMap(&input_file, manager, false),
+      glm::vec3(0.5, 0.5, 1.0)};
+  gfx::MapInfo ao_info = gfx::MapInfo{LoadMap(&input_file, manager, false),
+      glm::vec3(1.0, 1.0, 1.0)};
+  std::shared_ptr<gfx::Material> material(new gfx::Material(shader_type, albedo_info,
+    metallic_info, roughness_info, normal_info, ao_info, 0.05));
 
   // Copy the vertices directly into memory.
   size_t num_vertices;
@@ -90,6 +95,10 @@ void gfx::ModelInfo::Remap() {
   gfx::ModelInfo::Map();
 }
 
+std::shared_ptr<gfx::Material> gfx::ModelInfo::GetMaterial() {
+  return meshes[0].material;
+}
+
 GLuint gfx::ModelInfo::LoadMap(std::ifstream* input_file, gfx::TextureManager* manager,
     bool convert_to_linear) {
   char num_chars;
@@ -102,4 +111,3 @@ GLuint gfx::ModelInfo::LoadMap(std::ifstream* input_file, gfx::TextureManager* m
   input_file->read(path, num_chars);
   return manager->GetTextureHandle(std::string {path}, convert_to_linear);
 }
-
