@@ -4,6 +4,7 @@
 #include "gfx/camera.h"
 #include "gfx/color.h"
 #include "gfx/directional_light.h"
+#include "gfx/environment.h"
 #include "gfx/game_window.h"
 #include "gfx/model_info.h"
 #include "gfx/model_instance.h"
@@ -26,6 +27,8 @@ const std::string kMainVertexShaderPath = "shaders/main.vert";
 const std::string kMainFragmentShaderPath = "shaders/main.frag";
 const std::string kHdrVertexShaderPath = "shaders/hdr.vert";
 const std::string kHdrFragmentShaderPath = "shaders/hdr.frag";
+const std::string kSkyboxVertexShaderPath = "shaders/skybox.vert";
+const std::string kSkyboxFragmentShaderPath = "shaders/skybox.frag";
 
 struct Position {
   double x;
@@ -113,9 +116,11 @@ int main(int /* argc */, char* /* argv */[]) {
   try {
     camera = gfx::Camera();
     initialize_camera();
-    gfx::GameWindow game_window(kWindowWidth, kWindowHeight, kMainVertexShaderPath,
-        kMainFragmentShaderPath, kHdrVertexShaderPath, kHdrFragmentShaderPath, &camera, 45.0f,
-        gfx::Color(0.15f, 0.15f, 0.15f));
+    gfx::GameWindow game_window{kWindowWidth, kWindowHeight, kMainVertexShaderPath,
+        kMainFragmentShaderPath, kHdrVertexShaderPath, kHdrFragmentShaderPath,
+        kSkyboxVertexShaderPath, kSkyboxFragmentShaderPath, &camera, 45.0f,
+        gfx::Color(0.15f, 0.15f, 0.15f)};
+    gfx::Environment environment{"assets/hdr/pisa.hdr", 5.0f};
 
     // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(0.0f, -1.0f, 0.0f),
     //     glm::vec3(2.0f, 2.0f, 2.0f));
@@ -196,7 +201,7 @@ int main(int /* argc */, char* /* argv */[]) {
       handle_input(game_window.window);
       update_camera();
 
-      game_window.PrepareRender();
+      game_window.PrepareRender(&environment);
       for (gfx::ModelInstance* instance : model_instances) {
         game_window.RenderModel(instance);
       }

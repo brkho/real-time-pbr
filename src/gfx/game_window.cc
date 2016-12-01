@@ -11,17 +11,20 @@
 
 gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
     std::string main_fragment_path, std::string hdr_vertex_path, std::string hdr_fragment_path,
-    gfx::Camera* camera, float fov, gfx::Color color) : camera{camera}, window{nullptr},
-    field_of_view{fov}, program{0}, vp_width{0}, vp_height{0}, hdr_program{0},
-    multisampled_hdr_fbo{0}, multisampled_hdr_color_buffer{0}, matrix_handle{0}, draw_quad{nullptr},
-    quad_vertices{nullptr}, quad_elements{nullptr}, directional_light{nullptr} {
+    std::string skybox_vertex_path, std::string skybox_fragment_path, gfx::Camera* camera,
+    float fov, gfx::Color color) : camera{camera}, window{nullptr}, field_of_view{fov}, program{0},
+    vp_width{0}, vp_height{0}, hdr_program{0}, skybox_program{0}, multisampled_hdr_fbo{0},
+    multisampled_hdr_color_buffer{0}, matrix_handle{0}, draw_quad{nullptr}, quad_vertices{nullptr},
+    quad_elements{nullptr}, skybox_mesh{nullptr}, skybox_vertices{nullptr},
+    skybox_elements{nullptr}, directional_light{nullptr} {
   for (unsigned int i = 0; i < gfx::MAX_POINT_LIGHTS; i++) {
     point_lights[i] = nullptr;
   }
   gfx::GameWindow::InitializeGameWindow(width, height, color);
   program = gfx::GameWindow::LinkProgram(main_vertex_path, main_fragment_path);
   hdr_program = gfx::GameWindow::LinkProgram(hdr_vertex_path, hdr_fragment_path);
-  if (program == 0 || hdr_program == 0) {
+  skybox_program = gfx::GameWindow::LinkProgram(skybox_vertex_path, skybox_fragment_path);
+  if (program == 0 || hdr_program == 0 || skybox_program == 0) {
     throw gfx::GameWindowCannotBeInitializedException();
   }
 
@@ -32,6 +35,32 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
   vp_height = dimensions[3];
   glUseProgram(program);
 
+  InitializeHdrProgram();
+  InitializeSkyboxProgram();
+
+  // Set up the dithering texture to combat banding in low lighting conditions.
+  glGenTextures(1, &matrix_handle);
+  glBindTexture(GL_TEXTURE_2D, matrix_handle);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, 8, 8, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, bayer_matrix);
+  glUniform1i(glGetUniformLocation(hdr_program, "hdrBuffer"), 0);
+  glUniform2ui(glGetUniformLocation(hdr_program, "dimensions"), vp_width, vp_height);
+  glUniform1i(glGetUniformLocation(hdr_program, "bayer_matrix"), 1);
+
+  glUseProgram(program);
+}
+
+gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
+    std::string main_fragment_path, std::string hdr_vertex_path, std::string hdr_fragment_path,
+    std::string skybox_vertex_path, std::string skybox_fragment_path, gfx::Camera* camera) :
+    GameWindow(width, height, main_vertex_path, main_fragment_path, hdr_vertex_path,
+    hdr_fragment_path, skybox_vertex_path, skybox_fragment_path, camera, 45.0f,
+    gfx::Color(0.0f, 0.0f, 0.0f)) {}
+
+void gfx::GameWindow::InitializeHdrProgram() {
   // TODO(brkho): Actually save the handle to the multisampled HDR color buffer and the depth render
   // buffer object so we can clean them up on GameWindow destruction.
   // Generate the intermediate framebuffer which stores the HDR output.
@@ -55,34 +84,29 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
   // Set up quad used for rendering the output texture.
   glUseProgram(hdr_program);
   quad_vertices = new std::vector<gfx::Vertex>();
-  quad_vertices->push_back(gfx::GameWindow::PositionToQuadVertex(glm::vec3(-1.0f, -1.0f, 0.0f)));
-  quad_vertices->push_back(gfx::GameWindow::PositionToQuadVertex(glm::vec3(-1.0f, 1.0f, 0.0f)));
-  quad_vertices->push_back(gfx::GameWindow::PositionToQuadVertex(glm::vec3(1.0f, -1.0f, 0.0f)));
-  quad_vertices->push_back(gfx::GameWindow::PositionToQuadVertex(glm::vec3(1.0f, 1.9f, 0.0f)));
+  quad_vertices->push_back(gfx::GameWindow::PositionToVertex(glm::vec3(-1.0f, -1.0f, 0.0f)));
+  quad_vertices->push_back(gfx::GameWindow::PositionToVertex(glm::vec3(-1.0f, 1.0f, 0.0f)));
+  quad_vertices->push_back(gfx::GameWindow::PositionToVertex(glm::vec3(1.0f, -1.0f, 0.0f)));
+  quad_vertices->push_back(gfx::GameWindow::PositionToVertex(glm::vec3(1.0f, 1.9f, 0.0f)));
   quad_elements = new std::vector<GLuint>{0, 1, 3, 3, 2, 0};
   draw_quad = new gfx::Mesh(quad_vertices, quad_elements, nullptr, true);
-
-  // Set up the dithering texture to combat banding in low lighting conditions.
-  glGenTextures(1, &matrix_handle);
-  glBindTexture(GL_TEXTURE_2D, matrix_handle);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, 8, 8, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, bayer_matrix);
-  glUniform1i(glGetUniformLocation(hdr_program, "hdrBuffer"), 0);
-  glUniform2ui(glGetUniformLocation(hdr_program, "dimensions"), vp_width, vp_height);
-  glUniform1i(glGetUniformLocation(hdr_program, "bayer_matrix"), 1);
-
-  glUseProgram(program);
 }
 
-gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
-    std::string main_fragment_path, std::string hdr_vertex_path, std::string hdr_fragment_path,
-    gfx::Camera* camera) : GameWindow(width, height, main_vertex_path, main_fragment_path,
-    hdr_vertex_path, hdr_fragment_path, camera, 45.0f, gfx::Color(0.0f, 0.0f, 0.0f)) {}
+void gfx::GameWindow::InitializeSkyboxProgram() {
+  skybox_vertices = new std::vector<gfx::Vertex>();
+  skybox_elements = new std::vector<GLuint>;
+  // TODO(brkho): Use elements.
+  for (int i = 0; i < gfx::num_skybox_vertices * 3; i += 3) {
+    skybox_vertices->push_back(gfx::GameWindow::PositionToVertex(glm::vec3(
+        gfx::skybox_vertices[i], gfx::skybox_vertices[i + 1], gfx::skybox_vertices[i + 2])));
+    skybox_elements->push_back(i);
+    skybox_elements->push_back(i + 1);
+    skybox_elements->push_back(i + 2);
+  }
+  skybox_mesh = new gfx::Mesh(skybox_vertices, skybox_elements, nullptr, true);
+}
 
-gfx::Vertex gfx::GameWindow::PositionToQuadVertex(glm::vec3 position) {
+gfx::Vertex gfx::GameWindow::PositionToVertex(glm::vec3 position) {
   return gfx::Vertex{position, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 0.0f, 0.0f},
       glm::vec2{0.0f, 0.0f}};
 }
@@ -112,8 +136,8 @@ void gfx::GameWindow::InitializeGameWindow(int width, int height, gfx::Color col
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
-  glEnable(GL_SAMPLE_SHADING);
-  glMinSampleShading(0.5);
+  // glEnable(GL_SAMPLE_SHADING);
+  // glMinSampleShading(0.5);
 
   gfx::GameWindow::SetBufferClearColor(color);
   gfx::GameWindow::UpdateDimensions(width, height);
@@ -282,11 +306,38 @@ double gfx::GameWindow::GetElapsedTime() {
   return glfwGetTime();
 }
 
-void gfx::GameWindow::PrepareRender() {
-  glUseProgram(program);
+void gfx::GameWindow::PrepareRender(gfx::Environment* environment) {
   glBindFramebuffer(GL_FRAMEBUFFER, multisampled_hdr_fbo);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  // Draw skybox if enabled.
+  if (environment != nullptr) {
+    // Setup the program and uniforms.
+    glUseProgram(skybox_program);
+    glDepthMask(GL_FALSE);
+    GLint view_location = glGetUniformLocation(skybox_program, "view_transform");
+    glUniformMatrix4fv(view_location, 1, GL_FALSE,
+        glm::value_ptr(glm::mat4(glm::mat3(camera->GetViewTransform()))));
+    GLint projection_location = glGetUniformLocation(skybox_program, "projection_transform");
+    glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(perspective_projection));
+    GLint blur_location = glGetUniformLocation(skybox_program, "skybox_blur");
+    glUniform1f(blur_location, environment->skybox_blur);
+
+    // Setup the texture.
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, environment->environment_handle);
+    GLint environment_location = glGetUniformLocation(skybox_program, "environment_map");
+    glUniform1i(environment_location, 0);
+
+    // Draw the box.
+    glBindVertexArray(skybox_mesh->vao);
+    glDrawElements(GL_TRIANGLES, skybox_mesh->GetNumberOfIndices(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+    glDepthMask(GL_TRUE);
+  }
+
+  // Begin normal rendering.
+  glUseProgram(program);
   GLint view_location = glGetUniformLocation(program, "view_transform");
   glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(camera->GetViewTransform()));
   GLint projection_location = glGetUniformLocation(program, "projection_transform");
@@ -295,7 +346,8 @@ void gfx::GameWindow::PrepareRender() {
   glUniform3fv(camera_location, 1, glm::value_ptr(camera->camera_position));
 }
 
-void gfx::GameWindow::RenderModel(gfx::ModelInstance* model_instance) {
+void gfx::GameWindow::RenderModel(gfx::ModelInstance* model_instance,
+    gfx::Environment* environment) {
   model_instance->Draw(program);
 }
 

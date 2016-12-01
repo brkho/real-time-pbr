@@ -16,20 +16,16 @@ vec3 reinhard_map(vec3 hdr_color) {
 }
 
 void main() {
-  // Gamma correction and tone mapping.
+  // We do a custom MSAA resolve in order to do tone mapping before the resolve.
   ivec2 coords = ivec2(int(UV.s * dimensions.x), int(UV.t * dimensions.y));
-  // vec3 hdr_color = vec3(texelFetch(hdrBuffer, coords, 0));
-
   vec3 hdr_color = vec3(0.0);
   hdr_color += reinhard_map(vec3(texelFetch(hdrBuffer, coords, 0)));
   hdr_color += reinhard_map(vec3(texelFetch(hdrBuffer, coords, 1)));
   hdr_color += reinhard_map(vec3(texelFetch(hdrBuffer, coords, 2)));
   hdr_color += reinhard_map(vec3(texelFetch(hdrBuffer, coords, 3)));
-
   hdr_color /= 4.0;
 
-  vec3 reinhard_mapped = hdr_color / (hdr_color + vec3(1.0));
-  reinhard_mapped = hdr_color;
+  // Gamma correction.
   out_color = vec4(pow(hdr_color, vec3(1.0 / GAMMA)), 1.0);
 
   // Ordered dithering.

@@ -1,11 +1,12 @@
 #version 330 core
 
+// A fairly granular value for Pi.
 #define PI 3.1415926535897932384626433832795
 // Make sure this matches the MAX_POINT_LIGHTS in gfx/constants.h!
 #define MAX_POINT_LIGHTS 3
 // The maximum gloss to apply as a power.
 #define MAX_GLOSS 64.0
-// The gamma.
+// The gamma for converting between linear and sRGB.
 #define GAMMA 2.2
 
 struct DirectionalLight {

@@ -12,6 +12,7 @@
 #include "gfx/color.h"
 #include "gfx/constants.h"
 #include "gfx/directional_light.h"
+#include "gfx/environment.h"
 #include "gfx/mesh.h"
 #include "gfx/model_instance.h"
 #include "gfx/point_light.h"
@@ -28,14 +29,26 @@ namespace gfx {
 // Bayer Matrix for ordered dithing used to combat banding in low light scenes.
 // From: http://www.anisopteragames.com/how-to-fix-color-banding-with-dithering/
 const char bayer_matrix[] = {
-  10, 32,  8, 40,  2, 34, 10, 42,
+  10, 32, 8, 40, 2, 34, 10, 42,
   48, 16, 56, 24, 50, 18, 58, 26,
-  12, 44,  4, 36, 14, 46,  6, 38,
+  12, 44, 4, 36, 14, 46, 6, 38,
   60, 28, 52, 20, 62, 30, 54, 22,
-  3, 35, 11, 43,  1, 33,  9, 41,
+  3, 35, 11, 43, 1, 33, 9, 41,
   51, 19, 59, 27, 49, 17, 57, 25,
-  15, 47,  7, 39, 13, 45,  5, 37,
+  15, 47, 7, 39, 13, 45, 5, 37,
   63, 31, 55, 23, 61, 29, 53, 21};
+// Number of vertices in skybox_vertices.
+const int num_skybox_vertices = 36;
+// Vertex positions of a skybox centered at the origin and extending -1 units in each direction.
+const GLfloat skybox_vertices[] = {
+  -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f,
+  -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
+  1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f,
+  1.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f,
+  1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f,
+  1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f,
+  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
+  -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
 
 class GameWindow {
   public:
@@ -45,17 +58,21 @@ class GameWindow {
     // A reference to the underlying GLFW window.
     GLFWwindow* window;
 
-    // Constructor with a width, height, path to the vertex shader, path to the fragment shader,
-    // referenceto the camera, field of view, and the buffer clear color.
-    GameWindow(int width, int height, std::string main_vertex_path, std::string main_fragment_path,
-        std::string hdr_vertex_path, std::string hdr_fragment_path, gfx::Camera* camera, float fov,
-        gfx::Color color);
+    // The field of view for the window.
+    GLfloat field_of_view;
 
-    // Constructor with a width, height, path to the vertex shader, path to the fragment shader,
-    // referenceto the camera, field of view, and the buffer clear color. This defaults the FOV to
-    // 45 degrees and the buffer clear color to black.
+    // Constructor with a width, height, paths to the shaders, the reference to the camera, field
+    // of view, and the buffer clear color.
     GameWindow(int width, int height, std::string main_vertex_path, std::string main_fragment_path,
-        std::string hdr_vertex_path, std::string hdr_fragment_path, gfx::Camera* camera);
+        std::string hdr_vertex_path, std::string hdr_fragment_path, std::string skybox_vertex_path,
+        std::string skybox_fragment_path, gfx::Camera* camera, float fov, gfx::Color color);
+
+    // Constructor with a width, height, paths to the shaders, the reference to the camera, field
+    // of view, and the buffer clear color. This defaults the FOV to 45 degrees and the buffer
+    // clear color to black.
+    GameWindow(int width, int height, std::string main_vertex_path, std::string main_fragment_path,
+        std::string hdr_vertex_path, std::string hdr_fragment_path, std::string skybox_vertex_path,
+        std::string skybox_fragment_path, gfx::Camera* camera);
 
     // TODO: Actually clean up after ourselves with the Rule of Three.
 
@@ -100,12 +117,20 @@ class GameWindow {
     // This must be called every frame before drawing any ModelInstances to the screen. This sets
     // the state of the OpenGL context so that we can begin drawing the next frame. After this is
     // called, the caller shouldn't change the game state and should only call RenderModel until
-    // the render is completed with FinishRender.
-    void PrepareRender();
+    // the render is completed with FinishRender. This is passed an environment which is usde to
+    // render the skybox. A nullptr means that no skybox is rendered.
+    void PrepareRender(gfx::Environment* environment);
+
+    // Prepares the render without a skybox.
+    void PrepareRender() { PrepareRender(nullptr); }
 
     // Draws a given ModelInstance. Note that this must be called in between a PrepareRender and a
-    // a FinishRender.
-    void RenderModel(gfx::ModelInstance* model_instance);
+    // a FinishRender. An environment is passed for use in ambient lighting. A nullptr for the
+    // environment means that no environment is used in ambient lighting.
+    void RenderModel(gfx::ModelInstance* model_instance, gfx::Environment* environment);
+
+    // Renders a model without an environment.
+    void RenderModel(gfx::ModelInstance* model_instance) { RenderModel(model_instance, nullptr); }
 
     // Compeletes the rendering started by PrepareRender. This takes the accumulated render on the
     // HDR buffer and tone maps it onto the display buffer. It then swaps the buffer so the
@@ -113,9 +138,6 @@ class GameWindow {
     void FinishRender();
 
   private:
-    // The field of view for the window.
-    GLfloat field_of_view;
-
     // The main shader program used by the GameWindow. This outputs to a HDR framebuffer which is
     // in turn rendered with the hdr_program.
     GLuint program;
@@ -129,6 +151,9 @@ class GameWindow {
     // The HDR shader program that takes the output of the main shader program and tone maps it
     // into LDR space for the final render.
     GLuint hdr_program;
+
+    // The skybox shader program that renders the skybox given panoramic HDR texture.
+    GLuint skybox_program;
 
     // The Framebuffer Object (with greater floating point precision) that is written to by the
     // main shader and then subsequently used for rendering by the HDR program. This is
@@ -150,6 +175,15 @@ class GameWindow {
     // The elements that make up the draw_quad.
     std::vector<GLuint>* quad_elements;
 
+    // The actual skybox mesh used by the skybox shader for rendering.
+    gfx::Mesh* skybox_mesh;
+
+    // The vertices that make up the skybox_mesh.
+    std::vector<gfx::Vertex>* skybox_vertices;
+
+    // The elements that make up the skybox_mesh.
+    std::vector<GLuint>* skybox_elements;
+
     // The matrix used for the perspective projection.
     glm::mat4 perspective_projection;
 
@@ -161,6 +195,10 @@ class GameWindow {
 
     // An associative array mapping pointers to point lights back to an index into point_lights.
     std::unordered_map<gfx::PointLight*, unsigned int> point_lights_reverse;
+
+    void InitializeHdrProgram();
+
+    void InitializeSkyboxProgram();
 
     // Given a path to the shader and a shader type, compile the shader.
     GLuint CompileShader(std::string path, GLenum shader_type);
@@ -181,7 +219,7 @@ class GameWindow {
 
     // Helper function to turn a vec3 position into a Vertex to be consumed by the Mesh class with
     // non-important values for normal, tangent, and UV.
-    gfx::Vertex PositionToQuadVertex(glm::vec3 position);
+    gfx::Vertex PositionToVertex(glm::vec3 position);
 };
 
 }
