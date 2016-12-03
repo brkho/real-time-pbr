@@ -196,9 +196,15 @@ class GameWindow {
     // An associative array mapping pointers to point lights back to an index into point_lights.
     std::unordered_map<gfx::PointLight*, unsigned int> point_lights_reverse;
 
+    // Initializes the HDR program.
     void InitializeHdrProgram();
 
+    // Initializes the skybox program.
     void InitializeSkyboxProgram();
+
+    // Computes the N Hammersley points where N is defined in constants.h and passes them to the
+    // main shader via a uniform array.
+    void InitializeHammersleyPoints();
 
     // Given a path to the shader and a shader type, compile the shader.
     GLuint CompileShader(std::string path, GLenum shader_type);

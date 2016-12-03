@@ -34,6 +34,7 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
   vp_width = dimensions[2];
   vp_height = dimensions[3];
   glUseProgram(program);
+  InitializeHammersleyPoints();
 
   InitializeHdrProgram();
   InitializeSkyboxProgram();
@@ -109,6 +110,27 @@ void gfx::GameWindow::InitializeSkyboxProgram() {
 gfx::Vertex gfx::GameWindow::PositionToVertex(glm::vec3 position) {
   return gfx::Vertex{position, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 0.0f, 0.0f},
       glm::vec2{0.0f, 0.0f}};
+}
+
+void gfx::GameWindow::InitializeHammersleyPoints() {
+  for (unsigned int i = 0; i < gfx::NUM_IBL_SAMPLES; i++) {
+    // Hammersley calculation adapted from:
+    // http://www.math.uiuc.edu/~gfrancis/illimath/windows/aszgard_mini/pylibs/cgkit/hammersley.py
+    float u = 0.0f;
+    float p = 0.5f;
+    unsigned int k = i;
+    while (k > 0) {
+      if (k & 1) {
+        u += p;
+      }
+      p *= 0.5;
+      k = k >> 1;
+    }
+    float v = ((float)i + 0.5f) / (float)gfx::NUM_IBL_SAMPLES;
+    GLint location = glGetUniformLocation(program,
+        ("hammersley_points[" + std::to_string(i) + "]").c_str());
+    glUniform2f(location, u, v);
+  }
 }
 
 bool gfx::GameWindow::IsRunning() {
@@ -310,6 +332,7 @@ void gfx::GameWindow::PrepareRender(gfx::Environment* environment) {
   glBindFramebuffer(GL_FRAMEBUFFER, multisampled_hdr_fbo);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  glActiveTexture(GL_TEXTURE0);
   // Draw skybox if enabled.
   if (environment != nullptr) {
     // Setup the program and uniforms.
@@ -324,7 +347,6 @@ void gfx::GameWindow::PrepareRender(gfx::Environment* environment) {
     glUniform1f(blur_location, environment->skybox_blur);
 
     // Setup the texture.
-    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, environment->environment_handle);
     GLint environment_location = glGetUniformLocation(skybox_program, "environment_map");
     glUniform1i(environment_location, 0);
@@ -334,6 +356,8 @@ void gfx::GameWindow::PrepareRender(gfx::Environment* environment) {
     glDrawElements(GL_TRIANGLES, skybox_mesh->GetNumberOfIndices(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     glDepthMask(GL_TRUE);
+  } else {
+    glBindTexture(GL_TEXTURE_2D, 0);
   }
 
   // Begin normal rendering.
@@ -348,6 +372,14 @@ void gfx::GameWindow::PrepareRender(gfx::Environment* environment) {
 
 void gfx::GameWindow::RenderModel(gfx::ModelInstance* model_instance,
     gfx::Environment* environment) {
+  GLint enabled_location = glGetUniformLocation(program, "environment_map.enabled");
+  glUniform1i(enabled_location, environment != nullptr);
+  if (environment != nullptr) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, environment->environment_handle);
+    GLint environment_location = glGetUniformLocation(program, "environment_map.map");
+    glUniform1i(environment_location, 0);
+  }
   model_instance->Draw(program);
 }
 

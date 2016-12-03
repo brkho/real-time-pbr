@@ -23,6 +23,10 @@ const int kWindowHeight = 800;
 const double kRotateSensitivity = 0.005;
 const double kPanSensitivity = 0.005;
 const double kZoomSensitivity = 0.01;
+const double kInitialYaw = 2.15;
+const double kInitialPitch = 1.59;
+const double kInitialDistance = 9.0;
+const glm::vec3 kInitialPanOffset = glm::vec3(-0.67, 2.93, -0.37);
 const std::string kMainVertexShaderPath = "shaders/main.vert";
 const std::string kMainFragmentShaderPath = "shaders/main.frag";
 const std::string kHdrVertexShaderPath = "shaders/hdr.vert";
@@ -57,10 +61,14 @@ void update_camera() {
 }
 
 void initialize_camera() {
-  current_yaw = 0.0;
-  current_pitch = 0.78;
-  distance = 3.0;
-  pan_offset = glm::vec3(0.0, 0.0, 0.0);
+  // current_yaw = 0.0;
+  // current_pitch = 0.78;
+  // distance = 3.0;
+  // pan_offset = glm::vec3(0.0, 0.0, 0.0);
+  current_yaw = kInitialYaw;
+  current_pitch = kInitialPitch;
+  distance = kInitialDistance;
+  pan_offset = kInitialPanOffset;
   update_camera();
 }
 
@@ -120,9 +128,9 @@ int main(int /* argc */, char* /* argv */[]) {
         kMainFragmentShaderPath, kHdrVertexShaderPath, kHdrFragmentShaderPath,
         kSkyboxVertexShaderPath, kSkyboxFragmentShaderPath, &camera, 45.0f,
         gfx::Color(0.15f, 0.15f, 0.15f)};
-    gfx::Environment environment{"assets/hdr/pisa.hdr", 5.0f};
+    gfx::Environment environment{"assets/hdr/pisa.hdr"};
 
-    // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(0.0f, -1.0f, 0.0f),
+    // gfx::DirectionalLight directional_light = gfx::DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f),
     //     glm::vec3(2.0f, 2.0f, 2.0f));
     // game_window.SetDirectionalLight(&directional_light);
 
@@ -150,13 +158,13 @@ int main(int /* argc */, char* /* argv */[]) {
         glm::vec3(0.0f, 0.0f, 0.0f));
     model_instances.push_back(drawers_instance);
 
-    gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box_no_maps.eo", &texture_manager, true);
-    box_info.GetMaterial()->albedo_info.value = glm::vec3(1.0, 0.0, 0.0);
-    gfx::ModelInstance* box_instance = new gfx::ModelInstance(&box_info,
-        glm::vec3(8.0f, 8.0f, 8.0f));
-    box_instance->scale = glm::vec3(1.0f, 1.0f, 1.0f);
-    box_instance->Update();
-    model_instances.push_back(box_instance);
+    // gfx::ModelInfo box_info = gfx::ModelInfo("assets/primitives/box_no_maps.eo", &texture_manager, true);
+    // box_info.GetMaterial()->albedo_info.value = glm::vec3(1.0, 0.0, 0.0);
+    // gfx::ModelInstance* box_instance = new gfx::ModelInstance(&box_info,
+    //     glm::vec3(8.0f, 8.0f, 8.0f));
+    // box_instance->scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    // box_instance->Update();
+    // model_instances.push_back(box_instance);
 
     // for (int x = 0; x < 10; x++) {
     //   for (int y = 0; y < 10; y++) {
@@ -201,9 +209,9 @@ int main(int /* argc */, char* /* argv */[]) {
       handle_input(game_window.window);
       update_camera();
 
-      game_window.PrepareRender(&environment);
+      game_window.PrepareRender();
       for (gfx::ModelInstance* instance : model_instances) {
-        game_window.RenderModel(instance);
+        game_window.RenderModel(instance, &environment);
       }
       game_window.FinishRender();
     }
