@@ -9,6 +9,22 @@ This engine uses a custom model format that describes materials and gives the ve
 
 Currently there is an absence of documentation, so see `demo.cc` for more instructions on how to use this engine.
 
+## Features
+- Physically based material system and lighting (based on UE4). The exact material system accepts albedo, metallic, roughness, ambient occlusion, and normal maps.
+- Image based lighting.
+- MSAA with custom resolve for better HDR anti-aliasing.
+- Skyboxes.
+- Postprocess dithering to combat banding in dark scenes.
+- Custom material format for quick loading.
+- Real-time shadows.
+
+## Todo
+- Area lights.
+- More complex shadows.
+- Better GI approximation.
+- Many optimizations.
+- Animated meshes.
+
 ## Dependencies
 This project depends on a few external libraries:
 - OpenGL 3.0+
