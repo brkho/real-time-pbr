@@ -20,11 +20,11 @@ void gfx::Material::UseMaterial(GLuint program) {
   GLint ambient_location = glGetUniformLocation(program, "ambient_coefficient");
   glUniform1f(ambient_location, ambient_coefficient);
 
-  BindMap(program, albedo_info, "albedo", 1);
-  BindMap(program, metallic_info, "metallic", 2);
-  BindMap(program, roughness_info, "roughness", 3);
-  BindMap(program, normal_info, "normal", 4);
-  BindMap(program, ao_info, "ao", 5);
+  BindMap(program, albedo_info, "albedo", 2);
+  BindMap(program, metallic_info, "metallic", 3);
+  BindMap(program, roughness_info, "roughness", 4);
+  BindMap(program, normal_info, "normal", 5);
+  BindMap(program, ao_info, "ao", 6);
 }
 
 void gfx::Material::RemoveTexture(GLuint id) {

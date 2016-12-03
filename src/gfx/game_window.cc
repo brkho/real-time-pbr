@@ -9,11 +9,10 @@
 #include <sstream>
 #include <string>
 
-gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
-    std::string main_fragment_path, std::string hdr_vertex_path, std::string hdr_fragment_path,
-    std::string skybox_vertex_path, std::string skybox_fragment_path, gfx::Camera* camera,
-    float fov, gfx::Color color) : camera{camera}, window{nullptr}, field_of_view{fov}, program{0},
-    vp_width{0}, vp_height{0}, hdr_program{0}, skybox_program{0}, multisampled_hdr_fbo{0},
+gfx::GameWindow::GameWindow(int width, int height, gfx::Camera* camera, float fov,
+    gfx::Color color) : camera{camera}, window{nullptr}, field_of_view{fov}, program{0},
+    vp_width{0}, vp_height{0}, hdr_program{0}, skybox_program{0}, dir_shadow_program{0},
+    dir_shadow_fbo{0}, dir_shadow_depth_buffer{0}, multisampled_hdr_fbo{0},
     multisampled_hdr_color_buffer{0}, matrix_handle{0}, draw_quad{nullptr}, quad_vertices{nullptr},
     quad_elements{nullptr}, skybox_mesh{nullptr}, skybox_vertices{nullptr},
     skybox_elements{nullptr}, directional_light{nullptr} {
@@ -21,10 +20,12 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
     point_lights[i] = nullptr;
   }
   gfx::GameWindow::InitializeGameWindow(width, height, color);
-  program = gfx::GameWindow::LinkProgram(main_vertex_path, main_fragment_path);
-  hdr_program = gfx::GameWindow::LinkProgram(hdr_vertex_path, hdr_fragment_path);
-  skybox_program = gfx::GameWindow::LinkProgram(skybox_vertex_path, skybox_fragment_path);
-  if (program == 0 || hdr_program == 0 || skybox_program == 0) {
+  program = gfx::GameWindow::LinkProgram(MAIN_VERTEX_SHADER_PATH, MAIN_FRAG_SHADER_PATH);
+  hdr_program = gfx::GameWindow::LinkProgram(HDR_VERTEX_SHADER_PATH, HDR_FRAG_SHADER_PATH);
+  skybox_program = gfx::GameWindow::LinkProgram(SKYBOX_VERTEX_SHADER_PATH, SKYBOX_FRAG_SHADER_PATH);
+  dir_shadow_program = gfx::GameWindow::LinkProgram(DIR_SHADOW_VERTEX_SHADER_PATH,
+      DIR_SHADOW_FRAG_SHADER_PATH);
+  if (program == 0 || hdr_program == 0 || skybox_program == 0 || dir_shadow_program == 0) {
     throw gfx::GameWindowCannotBeInitializedException();
   }
 
@@ -38,6 +39,7 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
 
   InitializeHdrProgram();
   InitializeSkyboxProgram();
+  InitializeDirectionalLightShadowMappingProgram();
 
   // Set up the dithering texture to combat banding in low lighting conditions.
   glGenTextures(1, &matrix_handle);
@@ -54,12 +56,8 @@ gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
   glUseProgram(program);
 }
 
-gfx::GameWindow::GameWindow(int width, int height, std::string main_vertex_path,
-    std::string main_fragment_path, std::string hdr_vertex_path, std::string hdr_fragment_path,
-    std::string skybox_vertex_path, std::string skybox_fragment_path, gfx::Camera* camera) :
-    GameWindow(width, height, main_vertex_path, main_fragment_path, hdr_vertex_path,
-    hdr_fragment_path, skybox_vertex_path, skybox_fragment_path, camera, 45.0f,
-    gfx::Color(0.0f, 0.0f, 0.0f)) {}
+gfx::GameWindow::GameWindow(int width, int height, gfx::Camera* camera) : GameWindow(width, height,
+    camera, 45.0f, gfx::Color(0.0f, 0.0f, 0.0f)) {}
 
 void gfx::GameWindow::InitializeHdrProgram() {
   // TODO(brkho): Actually save the handle to the multisampled HDR color buffer and the depth render
@@ -105,6 +103,24 @@ void gfx::GameWindow::InitializeSkyboxProgram() {
     skybox_elements->push_back(i + 2);
   }
   skybox_mesh = new gfx::Mesh(skybox_vertices, skybox_elements, nullptr, true);
+}
+
+void gfx::GameWindow::InitializeDirectionalLightShadowMappingProgram() {
+  glGenFramebuffers(1, &dir_shadow_fbo);
+  glGenTextures(1, &dir_shadow_depth_buffer);
+  glBindTexture(GL_TEXTURE_2D, dir_shadow_depth_buffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT, 0,
+      GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glBindFramebuffer(GL_FRAMEBUFFER, dir_shadow_fbo);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+      dir_shadow_depth_buffer, 0);
+  glReadBuffer(GL_NONE);
+  glDrawBuffer(GL_NONE);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 gfx::Vertex gfx::GameWindow::PositionToVertex(glm::vec3 position) {
@@ -329,8 +345,10 @@ double gfx::GameWindow::GetElapsedTime() {
 }
 
 void gfx::GameWindow::PrepareRender(gfx::Environment* environment) {
-  glBindFramebuffer(GL_FRAMEBUFFER, multisampled_hdr_fbo);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  rendered_models.clear();
+  rendered_environments.clear();
+  // glBindFramebuffer(GL_FRAMEBUFFER, multisampled_hdr_fbo);
+  // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glActiveTexture(GL_TEXTURE0);
   // Draw skybox if enabled.
@@ -360,30 +378,64 @@ void gfx::GameWindow::PrepareRender(gfx::Environment* environment) {
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
+  // Calculate the shadow map for the directional light source.
+  glUseProgram(dir_shadow_program);
+  glViewport(0, 0, SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT);
+  glBindFramebuffer(GL_FRAMEBUFFER, dir_shadow_fbo);
+  glClear(GL_DEPTH_BUFFER_BIT);
+  glm::mat4 light_projection = glm::ortho(-8.0f, 8.0f, -8.0f, 8.0f, 0.01f, 30.0f);
+  glm::mat4 light_view = glm::lookAt(glm::vec3(8.0f, 8.0f, 16.0f),
+      glm::vec3(0.0f, 0.0f, 0.0f),
+      glm::vec3(0.0f, 1.0f, 0.0f));
+  light_space_matrix = light_projection * light_view;
+  glCullFace(GL_FRONT);
+}
+
+void gfx::GameWindow::RenderModel(gfx::ModelInstance* model_instance,
+    gfx::Environment* environment) {
+  rendered_models.push_back(model_instance);
+  rendered_environments.push_back(environment);
+  GLint light_space_location = glGetUniformLocation(dir_shadow_program, "light_space_transform");
+  glUniformMatrix4fv(light_space_location, 1, GL_FALSE, glm::value_ptr(light_space_matrix));
+  model_instance->Draw(dir_shadow_program);
+}
+
+void gfx::GameWindow::FinishRender() {
+  glCullFace(GL_BACK);
   // Begin normal rendering.
   glUseProgram(program);
+  glBindFramebuffer(GL_FRAMEBUFFER, multisampled_hdr_fbo);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glViewport(0, 0, vp_width, vp_height);
+  GLint light_space_location = glGetUniformLocation(program, "light_space_transform");
+  glUniformMatrix4fv(light_space_location, 1, GL_FALSE, glm::value_ptr(light_space_matrix));
   GLint view_location = glGetUniformLocation(program, "view_transform");
   glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(camera->GetViewTransform()));
   GLint projection_location = glGetUniformLocation(program, "projection_transform");
   glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(perspective_projection));
   GLint camera_location = glGetUniformLocation(program, "camera_position");
   glUniform3fv(camera_location, 1, glm::value_ptr(camera->camera_position));
-}
-
-void gfx::GameWindow::RenderModel(gfx::ModelInstance* model_instance,
-    gfx::Environment* environment) {
-  GLint enabled_location = glGetUniformLocation(program, "environment_map.enabled");
-  glUniform1i(enabled_location, environment != nullptr);
-  if (environment != nullptr) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, environment->environment_handle);
-    GLint environment_location = glGetUniformLocation(program, "environment_map.map");
-    glUniform1i(environment_location, 0);
+  // Render all of the saved items.
+  for (unsigned int i = 0; i < rendered_models.size(); i++) {
+  // for (auto instance : rendered_models) {
+    gfx::ModelInstance* instance = rendered_models[i];
+    gfx::Environment* environment = rendered_environments[i];
+    GLint enabled_location = glGetUniformLocation(program, "environment_map.enabled");
+    glUniform1i(enabled_location, environment != nullptr);
+    if (environment != nullptr) {
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, environment->environment_handle);
+      GLint environment_location = glGetUniformLocation(program, "environment_map.map");
+      glUniform1i(environment_location, 0);
+    }
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, dir_shadow_depth_buffer);
+    GLint shadow_map_location = glGetUniformLocation(program, "shadow_map");
+    glUniform1i(shadow_map_location, 1);
+    instance->Draw(program);
   }
-  model_instance->Draw(program);
-}
 
-void gfx::GameWindow::FinishRender() {
+
   glUseProgram(hdr_program);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, multisampled_hdr_color_buffer);

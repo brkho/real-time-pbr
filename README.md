@@ -24,6 +24,7 @@ Currently there is an absence of documentation, so see `demo.cc` for more instru
 - Better GI approximation.
 - Many optimizations.
 - Animated meshes.
+- Deferred rendering.
 
 ## Dependencies
 This project depends on a few external libraries:

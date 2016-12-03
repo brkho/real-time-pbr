@@ -33,4 +33,5 @@ void main() {
   ivec2 texel_coords = ivec2(int(texel_dimensions.x) % 8, int(texel_dimensions.y) % 8);
   float bayer_value = float(texelFetch(bayer_matrix, texel_coords, 0).r);
   out_color = out_color + (bayer_value / 32.0 / 255.0) + (1.0 / 255.0);
+  // out_color = vec4(vec3(texture(shadow_map, UV).r), 1.0);
 }

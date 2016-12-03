@@ -23,6 +23,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace gfx {
 
@@ -61,18 +62,13 @@ class GameWindow {
     // The field of view for the window.
     GLfloat field_of_view;
 
-    // Constructor with a width, height, paths to the shaders, the reference to the camera, field
-    // of view, and the buffer clear color.
-    GameWindow(int width, int height, std::string main_vertex_path, std::string main_fragment_path,
-        std::string hdr_vertex_path, std::string hdr_fragment_path, std::string skybox_vertex_path,
-        std::string skybox_fragment_path, gfx::Camera* camera, float fov, gfx::Color color);
+    // Constructor with a width, height, the reference to the camera, field of view, and the buffer
+    // clear color.
+    GameWindow(int width, int height, gfx::Camera* camera, float fov, gfx::Color color);
 
-    // Constructor with a width, height, paths to the shaders, the reference to the camera, field
-    // of view, and the buffer clear color. This defaults the FOV to 45 degrees and the buffer
-    // clear color to black.
-    GameWindow(int width, int height, std::string main_vertex_path, std::string main_fragment_path,
-        std::string hdr_vertex_path, std::string hdr_fragment_path, std::string skybox_vertex_path,
-        std::string skybox_fragment_path, gfx::Camera* camera);
+    // Constructor with a width, height, the reference to the camera, field of view, and the buffer
+    // clear color. This defaults the FOV to 45 degrees and the buffer clear color to black.
+    GameWindow(int width, int height, gfx::Camera* camera);
 
     // TODO: Actually clean up after ourselves with the Rule of Three.
 
@@ -155,6 +151,16 @@ class GameWindow {
     // The skybox shader program that renders the skybox given panoramic HDR texture.
     GLuint skybox_program;
 
+    // The shader program used for generating shadow maps from directional lights.
+    GLuint dir_shadow_program;
+
+    // Frame Buffer Object that is written to by the directional shadow mapping program. This only
+    // has a depth component.
+    GLuint dir_shadow_fbo;
+
+    // Depth buffer to be used with the directional shadow mapping FBO.
+    GLuint dir_shadow_depth_buffer;
+
     // The Framebuffer Object (with greater floating point precision) that is written to by the
     // main shader and then subsequently used for rendering by the HDR program. This is
     // multisampled for MSAA.
@@ -196,11 +202,23 @@ class GameWindow {
     // An associative array mapping pointers to point lights back to an index into point_lights.
     std::unordered_map<gfx::PointLight*, unsigned int> point_lights_reverse;
 
+    // TODO(brkho): Replace this with a scene-based rendering system.
+    // A temporary hack to allow me to do multiple pass rendering. This stores the objects that
+    // have been rendered using RenderModel so they can be rendered again in a different pass.
+    std::vector<gfx::ModelInstance*> rendered_models;
+
+    std::vector<gfx::Environment*> rendered_environments;
+
+    glm::mat4 light_space_matrix;
+
     // Initializes the HDR program.
     void InitializeHdrProgram();
 
     // Initializes the skybox program.
     void InitializeSkyboxProgram();
+
+    // Initializes the directional light shadow mapping program.
+    void InitializeDirectionalLightShadowMappingProgram();
 
     // Computes the N Hammersley points where N is defined in constants.h and passes them to the
     // main shader via a uniform array.

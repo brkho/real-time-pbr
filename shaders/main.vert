@@ -9,16 +9,19 @@ uniform mat4 model_transform;
 uniform mat4 normal_transform;
 uniform mat4 view_transform;
 uniform mat4 projection_transform;
+uniform mat4 light_space_transform;
 
 out vec3 Normal;
 out vec2 UV;
 out vec3 WorldPosition;
+out vec4 LightSpacePosition;
 out mat3 TBN;
 
 void main() {
   gl_Position = projection_transform * view_transform * model_transform * vec4(position, 1.0);
   WorldPosition = vec3(model_transform * vec4(position, 1.0));
   Normal = normalize(mat3(normal_transform) * normal);
+  LightSpacePosition = light_space_transform * vec4(WorldPosition, 1.0);
   UV = uv;
 
   vec3 normalized_tangent = normalize(mat3(normal_transform) * tangent);

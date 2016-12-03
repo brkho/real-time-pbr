@@ -45,12 +45,41 @@ uniform int shader_type;
 uniform float ambient_coefficient;
 uniform vec4 base_color;
 uniform vec3 camera_position;
+uniform sampler2D shadow_map;
 
 in vec2 UV;
 in vec3 WorldPosition;
+in vec4 LightSpacePosition;
 in mat3 TBN;
 
 out vec4 out_color;
+
+float get_shadow(vec3 normal, vec3 light_direction) {
+  // return 1.0;
+  vec3 coords = LightSpacePosition.xyz / LightSpacePosition.w;
+  coords = coords * 0.5 + 0.5;
+  if (coords.z > 1.0)
+    return 1.0;
+  float closest_depth = texture(shadow_map, coords.xy).r;
+  float current_depth = coords.z;
+  float bias = max(0.005 * (1.0 - dot(normal, light_direction)), 0.00005);
+  // floatbias = 0;
+  float shadow = 0.0;
+  vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+  for(int x = -2; x <= 2; ++x) {
+    for(int y = -2; y <= 2; ++y) {
+      float pcf_depth = texture(shadow_map, coords.xy + vec2(x, y) * texel_size).r;
+      shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+    }
+  }
+  shadow /= 25.0;
+  if (((WorldPosition.x < 1.7 && WorldPosition.x > 1.1) || (WorldPosition.x > -1.8 &&
+      WorldPosition.x < -1.2)) && WorldPosition.y < 5.0 && WorldPosition.y > 1.2 &&
+      WorldPosition.z > 0.0) {
+    return (1.0 - (shadow * 0.5));
+  }
+  return (1.0 - (shadow));
+}
 
 float clamped_cosine(vec3 a, vec3 b) {
   return min(max(dot(a, b), 0.0), 1.0);
@@ -184,14 +213,16 @@ void main() {
     }
     total_color /= float(NUM_IBL_SAMPLES);
   } else {
-    total_color = mix(albedo * 0.05, vec3(0.0), metallic);
+    total_color = mix(albedo * 0.03, vec3(0.0), metallic);
   }
 
   if (directional_light.enabled) {
-    total_color += get_directional_light_contribution(albedo, metallic, roughness, normal);
+    float shadow = get_shadow(normal, -directional_light.direction);
+    total_color += shadow * get_directional_light_contribution(albedo, metallic, roughness, normal);
   }
   if (point_lights[0].enabled) {
-    total_color += get_point_light_contribution(0, albedo, metallic, roughness, normal);
+    float shadow = get_shadow(normal, -directional_light.direction);
+    total_color += shadow * get_point_light_contribution(0, albedo, metallic, roughness, normal);
   }
   if (point_lights[1].enabled) {
     total_color += get_point_light_contribution(1, albedo, metallic, roughness, normal);
@@ -203,4 +234,8 @@ void main() {
   // Bias AO because it will eventually be gamma corrected.
   total_color = total_color * pow(ao, vec3(GAMMA));
   out_color = vec4(total_color, 1.0);
+    // out_color = vec4(0.0, 1.0, 0.0, 1.0);
+  // }
+  // float shadow = get_shadow(normal, -directional_light.direction);
+  // out_color = vec4(vec3(shadow), 1.0);
 }
