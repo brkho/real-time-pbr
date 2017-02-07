@@ -9,6 +9,9 @@ This engine uses a custom model format that describes materials and gives the ve
 
 Currently there is an absence of documentation, so see `demo.cc` for more instructions on how to use this engine.
 
+![Demo](assets/demo.png "Demo")
+[Video demo](https://www.youtube.com/watch?v=NjngQDipJEk)
+
 ## Features
 - Physically based material system and lighting (based on UE4). The exact material system accepts albedo, metallic, roughness, ambient occlusion, and normal maps.
 - Image based lighting.
